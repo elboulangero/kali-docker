@@ -26,6 +26,6 @@ RUN echo "deb http://http.kali.org/kali kali-rolling main contrib non-free" > /e
 ENV DEBIAN_FRONTEND noninteractive
 RUN set -x \
     && apt-get -yqq update \
-    && apt-get -y dist-upgrade \
+    && apt-get -yqq dist-upgrade \
     && apt-get clean
 CMD ["bash"]
