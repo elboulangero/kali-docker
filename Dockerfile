@@ -1,5 +1,4 @@
 FROM kalilinux/kali-linux-docker
-MAINTAINER steev@kali.org
 # Metadata params
 ARG BUILD_DATE
 ARG VERSION
@@ -20,7 +19,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.docker.cmd.devel='docker run --rm -ti kalilinux/kali-linux-docker' \
       org.label-schema.docker.debug='docker logs $CONTAINER' \
       io.github.offensive-security.docker.dockerfile="Dockerfile" \
-      io.github.offensive-security.license="GPLv3"
+      io.github.offensive-security.license="GPLv3" \
+      MAINTAINER="Steev Klimaszewski <steev@kali.org>"
 RUN echo "deb http://http.kali.org/kali kali-rolling main contrib non-free" > /etc/apt/sources.list && \
     echo "deb-src http://http.kali.org/kali kali-rolling main contrib non-free" >> /etc/apt/sources.list
 ENV DEBIAN_FRONTEND noninteractive
@@ -28,4 +28,4 @@ RUN set -x \
     && apt-get -yqq update \
     && apt-get -y dist-upgrade \
     && apt-get clean
-ENTRYPOINT ["bash"]
+CMD ["bash"]
