@@ -19,8 +19,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.docker.cmd='docker run --rm kalilinux/kali-linux-docker' \
       org.label-schema.docker.cmd.devel='docker run --rm -ti kalilinux/kali-linux-docker' \
       org.label-schema.docker.debug='docker logs $CONTAINER' \
-      io.github.dminca.docker.dockerfile="Dockerfile" \
-      io.github.dminca.license="GPLv3"
+      io.github.offensive-security.docker.dockerfile="Dockerfile" \
+      io.github.offensive-security.license="GPLv3"
 RUN echo "deb http://http.kali.org/kali kali-rolling main contrib non-free" > /etc/apt/sources.list && \
 echo "deb-src http://http.kali.org/kali kali-rolling main contrib non-free" >> /etc/apt/sources.list
 ENV DEBIAN_FRONTEND noninteractive
