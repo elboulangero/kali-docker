@@ -20,7 +20,7 @@ TAG=$(sudo docker run -t -i kalilinux/kali-linux-docker awk '{print $NF}' /etc/d
 echo "Tagging kali with $TAG" &&\
 sudo docker tag kalilinux/kali-linux-docker:$VERSION kalilinux/kali-linux-docker:$TAG &&\
 echo "Labeling kali" &&\
-sudo docker build --rm -t kalilinux/kali-linux-docker:$VERSION \
+sudo docker build --squash --rm -t kalilinux/kali-linux-docker:$VERSION \
 --build-arg BUILD_DATE=$BUILD_DATE \
 --build-arg VERSION=$VERSION \
 --build-arg VCS_URL=$VCS_URL \
