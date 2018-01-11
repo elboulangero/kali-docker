@@ -4,7 +4,7 @@ There are no tools added to this image, so you will need to install them yoursel
 For details about Kali Linux metapackages, check https://www.kali.org/news/kali-linux-metapackages/
 
 # REQUIRES EXPERIMENTAL TO BE TURNED ON
-Due to --sqaush being passed to the docker daemon, if experimental features
+Due to --squash being passed to the docker daemon, if experimental features
 aren't turned on in your daemon, the build.sh script will fail.
 
 On Kali, this is done via /etc/docker/daemon.json having the following contents:
