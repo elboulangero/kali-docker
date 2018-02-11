@@ -15,5 +15,5 @@ On Kali, this is done via /etc/docker/daemon.json having the following contents:
 }
 ```
 
-Tue Jan  9 16:10:25 EST 2018
+Sun Feb 11 19:52:49 EST 2018
 
