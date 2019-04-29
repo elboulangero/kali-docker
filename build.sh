@@ -12,7 +12,7 @@ VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
 # Fetch the latest Kali debootstrap script from git
-curl "https://git.kali.org/gitweb/?p=packages/debootstrap.git;a=blob_plain;f=scripts/kali;h=50d7ef5b4e9e905cc6da8655416cdf3ef559911e;hb=refs/heads/kali/master" > kali-debootstrap &&\
+curl "https://gitlab.com/kalilinux/packages/debootstrap/raw/kali/master/scripts/kali" > kali-debootstrap && \
 sudo debootstrap kali-rolling ./kali-root https://http.kali.org/kali ./kali-debootstrap &&\
 sudo tar -C kali-root -c . | sudo docker import - kalilinux/kali-linux-docker &&\
 sudo rm -rf ./kali-root &&\
