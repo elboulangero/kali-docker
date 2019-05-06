@@ -13,7 +13,7 @@ sudo apt-get install -yqq debootstrap curl
 
 # Fetch the latest Kali debootstrap script from git
 curl "https://gitlab.com/kalilinux/packages/debootstrap/raw/kali/master/scripts/kali" > kali-debootstrap && \
-  sudo debootstrap --variant=minbase kali-rolling ./kali-root https://http.kali.org/kali ./kali-debootstrap && \
+  sudo debootstrap --variant=minbase --include=kali-archive-keyring kali-rolling ./kali-root https://http.kali.org/kali ./kali-debootstrap && \
   sudo rm -rf ./kali-root/var/cache/apt/archives/*.deb && \
   sudo tar -C kali-root -c . | sudo docker import - kalilinux/kali-linux-docker && \
   sudo rm -rf ./kali-root && \
