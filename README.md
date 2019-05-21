@@ -18,5 +18,5 @@ On Kali, this is done via /etc/docker/daemon.json having the following contents:
 Note: This is only a requirement for us at Offensive Security to reduce the image size when we push a new image to Docker Hub.
 If you're building for personal use, you can remove the `--squash` option in build.sh
 
-Mon Feb 18 17:23:23 EST 2019
+Tue May 21 13:59:06 EDT 2019
 
