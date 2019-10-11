@@ -16,6 +16,7 @@ build-rootfs:
         paths:
             - "*.tar.xz"
     script: |
+        set -e
         apt-get -y update
         apt-get -y install wget debootstrap
         # XXX: don't harcode the version
@@ -36,6 +37,9 @@ build-docker-images:
         paths:
             - "*.conf"
     script: |
+        set -e
+        apk update
+        apk add git
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
         for distro in $DISTROS; do
             ./docker-build.sh $distro
@@ -65,6 +69,7 @@ push-docker-images:
     dependencies:
         - build-docker-images
     script: |
+        set -e
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
         for distro in $DISTROS; do
             ./docker-push.sh $distro
