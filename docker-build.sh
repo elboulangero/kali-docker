@@ -32,6 +32,11 @@ docker build --pull -t $CI_REGISTRY_IMAGE/$IMAGE:$VERSION \
     --build-arg VCS_URL=$VCS_URL \
     --build-arg VCS_REF=$VCS_REF .
 
+if [ -n "$CI_JOB_TOKEN" ]; then
+    # Push the image so that subsequent jobs can fetch it
+    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
+fi
+
 cat >$DISTRO.conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
