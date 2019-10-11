@@ -1,0 +1,71 @@
+
+variables:
+    #DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
+    DISTROS: 'kali-rolling'
+
+stages:
+    - build
+    - register
+    - test
+    - push
+
+build-rootfs:
+    stage: build
+    image: debian:testing
+    artifacts:
+        paths:
+            - *.tar.xz
+    script: |
+        apt-get update
+        apt-get install wget
+        # XXX: don't harcode the version
+        wget http://http.kali.org/kali/pool/main/k/kali-archive-keyring/kali-archive-keyring_2018.2_all.deb
+        dpkg -i kali-archive-keyring_*_all.deb
+        for distro in $DISTROS; do
+            ./build-rootfs.sh $distro
+        done
+
+build-docker-images:
+    stage: register
+    image: docker:latest
+    services:
+        - docker:dind
+    dependencies:
+        - build-rootfs
+    artifacts:
+        paths:
+            - *.conf
+    script: |
+        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+        for distro in $DISTROS; do
+            ./docker-build.sh $distro
+        done
+
+test-docker-images:
+    stage: test
+    image: docker:latest
+    services:
+        - docker:dind
+    dependencies:
+        - build-docker-images
+    script: |
+        set -e
+        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+        for distro in $DISTROS; do
+            . ./$distro.conf || true
+            docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION /bin/true
+            docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION test -e /etc/dpkg/origins/kali
+        done
+
+push-docker-images:
+    stage: push
+    image: docker:latest
+    services:
+        - docker:dind
+    dependencies:
+        - build-docker-images
+    script: |
+        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+        for distro in $DISTROS; do
+            ./docker-push.sh $distro
+        done

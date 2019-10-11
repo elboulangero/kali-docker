@@ -1,9 +1,11 @@
-FROM kalilinux/kali-linux-docker
+FROM scratch
+
 # Metadata params
 ARG BUILD_DATE
 ARG VERSION
 ARG VCS_URL
 ARG VCS_REF
+ARG TARBALL
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url=$VCS_URL \
@@ -20,12 +22,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.docker.debug='docker logs $CONTAINER' \
       io.github.offensive-security.docker.dockerfile="Dockerfile" \
       io.github.offensive-security.license="GPLv3" \
-      MAINTAINER="Steev Klimaszewski <steev@kali.org>"
-RUN echo "deb http://http.kali.org/kali kali-rolling main contrib non-free" > /etc/apt/sources.list && \
-    echo "deb-src http://http.kali.org/kali kali-rolling main contrib non-free" >> /etc/apt/sources.list
-ENV DEBIAN_FRONTEND noninteractive
-RUN set -x \
-    && apt-get -yqq update \
-    && apt-get -yqq dist-upgrade \
-    && apt-get clean
+      MAINTAINER="Kali Developers <devel@kali.org>"
+
+ADD $TARBALL /
+
 CMD ["bash"]
