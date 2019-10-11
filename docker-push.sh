@@ -10,6 +10,9 @@ DISTRO=$1
 # $CI_REGISTRY_IMAGE/$IMAGE:$VERSION has been built by docker-build.sh
 
 # Overwrite the "latest" version too
+if [ -n "$CI_JOB_TOKEN" ]; then
+    docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
+fi
 docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $CI_REGISTRY_IMAGE/$IMAGE:latest
 
 # Try to push tags
