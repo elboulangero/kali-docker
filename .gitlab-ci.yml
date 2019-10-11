@@ -57,6 +57,7 @@ test-docker-images:
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
         for distro in $DISTROS; do
             . ./$distro.conf || true
+            docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
             docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION /bin/true
             docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION test -e /etc/dpkg/origins/kali
         done
@@ -74,3 +75,5 @@ push-docker-images:
         for distro in $DISTROS; do
             ./docker-push.sh $distro
         done
+
+# TODO: clean up old images that accumulate...
