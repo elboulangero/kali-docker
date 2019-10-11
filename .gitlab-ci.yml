@@ -14,7 +14,7 @@ build-rootfs:
     image: debian:testing
     artifacts:
         paths:
-            - *.tar.xz
+            - "*.tar.xz"
     script: |
         apt-get update
         apt-get install wget
@@ -34,7 +34,7 @@ build-docker-images:
         - build-rootfs
     artifacts:
         paths:
-            - *.conf
+            - "*.conf"
     script: |
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
         for distro in $DISTROS; do
