@@ -3,17 +3,9 @@
 set -e
 
 DISTRO=$1
-VERSION=$(. ./$DISTRO.conf; echo $VERSION)
-CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 
-case "$DISTRO" in
-    kali-last-snapshot)
-	IMAGE=kali
-	;;
-    *)
-	IMAGE=$DISTRO
-	;;
-esac
+# Retrieve variables from former docker-build.sh
+. ./$DISTRO.conf
 
 # $CI_REGISTRY_IMAGE/$IMAGE:$VERSION has been built by docker-build.sh
 
