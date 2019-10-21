@@ -19,8 +19,9 @@ build-rootfs:
         set -e
         apt-get -y update
         apt-get -y install wget debootstrap
-        # XXX: don't harcode the version
-        wget http://http.kali.org/kali/pool/main/k/kali-archive-keyring/kali-archive-keyring_2018.2_all.deb
+        KEYRING_PKG_URL=$(wget -q -O - http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+        KEYRING_PKG_URL="http://http.kali.org/kali/$KEYRING_PKG_URL"
+        wget $KEYRING_PKG_URL
         dpkg -i kali-archive-keyring_*_all.deb
         for distro in $BASE_DISTROS; do
             ./build-rootfs.sh $distro
