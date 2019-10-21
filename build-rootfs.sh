@@ -27,6 +27,7 @@ fi
 rm -rf $rootfsDir $distro.tar.xz
 
 debootstrap --variant=minbase --components=main,contrib,non-free \
+    --include=kali-archive-keyring \
     $distro $rootfsDir $mirror
 
 rootfs_chroot apt-get clean
