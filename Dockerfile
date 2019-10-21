@@ -6,23 +6,18 @@ ARG VERSION
 ARG VCS_URL
 ARG VCS_REF
 ARG TARBALL
+ARG RELEASE_DESCRIPTION
 
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url=$VCS_URL \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.version=$VERSION \
-      org.label-schema.name='Kali Linux' \
-      org.label-schema.description='Official Kali Linux docker image' \
-      org.label-schema.usage='https://www.kali.org/news/official-kali-linux-docker-images/' \
-      org.label-schema.url='https://www.kali.org/' \
-      org.label-schema.vendor='Offensive Security' \
-      org.label-schema.schema-version='1.0' \
-      org.label-schema.docker.cmd='docker run --rm kalilinux/kali-linux-docker' \
-      org.label-schema.docker.cmd.devel='docker run --rm -ti kalilinux/kali-linux-docker' \
-      org.label-schema.docker.debug='docker logs $CONTAINER' \
-      io.github.offensive-security.docker.dockerfile="Dockerfile" \
-      io.github.offensive-security.license="GPLv3" \
-      MAINTAINER="Kali Developers <devel@kali.org>"
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
+LABEL org.opencontainers.image.created=$BUILD_DATE \
+      org.opencontainers.image.source=$VCS_URL \
+      org.opencontainers.image.revision=$VCS_REF \
+      org.opencontainers.image.vendor='Offensive Security' \
+      org.opencontainers.image.version=$VERSION \
+      org.opencontainers.image.title="Kali Linux ($RELEASE_DESCRIPTION release)" \
+      org.opencontainers.image.description="Official Kali Linux docker image for $RELEASE_DESCRIPTION" \
+      org.opencontainers.image.url='https://www.kali.org/' \
+      org.opencontainers.image.authors="Kali Developers <devel@kali.org>"
 
 ADD $TARBALL /
 

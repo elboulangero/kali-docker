@@ -18,10 +18,12 @@ case "$DISTRO" in
 	mkdir -p $CHROOT
 	tar -C $CHROOT -xf $TARBALL
 	VERSION=$(. $CHROOT/etc/os-release; echo $VERSION)
+	RELEASE_DESCRIPTION="$VERSION"
 	;;
     *)
 	IMAGE=$DISTRO
 	VERSION=$BUILD_VERSION
+	RELEASE_DESCRIPTION="$DISTRO"
 	;;
 esac
 
@@ -30,7 +32,9 @@ docker build --pull -t $CI_REGISTRY_IMAGE/$IMAGE:$VERSION \
     --build-arg BUILD_DATE=$BUILD_DATE \
     --build-arg VERSION=$VERSION \
     --build-arg VCS_URL=$VCS_URL \
-    --build-arg VCS_REF=$VCS_REF .
+    --build-arg VCS_REF=$VCS_REF \
+    --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
+    .
 
 if [ -n "$CI_JOB_TOKEN" ]; then
     # Push the image so that subsequent jobs can fetch it
