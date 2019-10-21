@@ -1,6 +1,7 @@
 
 variables:
-    DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
+    BASE_DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
+    EXTRA_DISTROS: 'kali-experimental kali-bleeding-edge'
 
 stages:
     - build
@@ -21,7 +22,7 @@ build-rootfs:
         # XXX: don't harcode the version
         wget http://http.kali.org/kali/pool/main/k/kali-archive-keyring/kali-archive-keyring_2018.2_all.deb
         dpkg -i kali-archive-keyring_*_all.deb
-        for distro in $DISTROS; do
+        for distro in $BASE_DISTROS; do
             ./build-rootfs.sh $distro
         done
 
@@ -40,8 +41,11 @@ build-docker-images:
         apk update
         apk add git
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-        for distro in $DISTROS; do
+        for distro in $BASE_DISTROS; do
             ./docker-build.sh $distro
+        done
+        for distro in $EXTRA_DISTROS; do
+            ./docker-build-extra.sh $distro
         done
 
 test-docker-images:
@@ -54,7 +58,7 @@ test-docker-images:
     script: |
         set -e
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-        for distro in $DISTROS; do
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             . ./$distro.conf || true
             docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
             docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION /bin/true
@@ -71,14 +75,14 @@ push-docker-images:
     script: |
         set -e
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-        for distro in $DISTROS; do
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             ./docker-push.sh $distro
         done
         # Login to docker hub and push there too
         DOCKER_HUB_REGISTRY="docker.io"
         DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
         docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_ACCESS_TOKEN $DOCKER_HUB_REGISTRY
-        for distro in $DISTROS; do
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             . ./$distro.conf || true
             docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
             docker tag $CI_REGISTRY_IMAGE/$IMAGE:latest $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:latest
