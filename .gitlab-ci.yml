@@ -75,6 +75,8 @@ push-docker-images:
         - build-docker-images
     script: |
         set -e
+        apk update
+        apk add curl jq
         docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             ./docker-push.sh $distro
@@ -89,7 +91,9 @@ push-docker-images:
             docker tag $CI_REGISTRY_IMAGE/$IMAGE:latest $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:latest
             docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
             docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:latest
+            # XXX: this operation is currently failing with "The operation
+            # is unsupported.". We should aim to get it to work...
+            ./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE
         done
 
-
-# TODO: clean up old images that accumulate...
+# TODO: clean up old images that accumulate in gitlab's container registry too...
