@@ -10,7 +10,7 @@ IMAGE=$DISTRO
 docker build --pull -t $CI_REGISTRY_IMAGE/$IMAGE:$VERSION \
     --build-arg CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE \
     --build-arg VERSION=$VERSION \
-    -f extra/$IMAGE
+    -f extra/$IMAGE \
     .
 
 if [ -n "$CI_JOB_TOKEN" ]; then
