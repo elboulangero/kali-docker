@@ -30,6 +30,8 @@ debootstrap --variant=minbase --components=main,contrib,non-free \
     --include=kali-archive-keyring \
     $distro $rootfsDir $mirror
 
+rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
+
 rootfs_chroot apt-get clean
 
 # Inspired by /usr/share/docker.io/contrib/mkimage/debootstrap
