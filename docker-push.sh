@@ -1,27 +1,32 @@
-#!/bin/sh
-
-set -e
+#!/bin/bash -e
 
 DISTRO=$1
+architectures=( $ARCHS )
 
-# Retrieve variables from former docker-build.sh
-. ./$DISTRO.conf
+for architecture in "${architectures[@]}"; do
 
-# $CI_REGISTRY_IMAGE/$IMAGE:$VERSION has been built by docker-build.sh
+  # Retrieve variables from former docker-build.sh
+  . ./${architecture}-${DISTRO}.conf
 
-# Overwrite the "latest" version too
+  if [ -n "$CI_JOB_TOKEN" ]; then
+    echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    docker pull $CI_REGISTRY_IMAGE/${IMAGE}:$VERSION
+
+    DOCKER_HUB_REGISTRY="docker.io"
+    DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
+    echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
+    docker tag $CI_REGISTRY_IMAGE/${IMAGE}:$VERSION $DOCKER_HUB_ORGANIZATION/${IMAGE}:$architecture
+    docker push $DOCKER_HUB_ORGANIZATION/${IMAGE}:$architecture
+
+  else
+    docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $CI_REGISTRY_IMAGE/$IMAGE:latest
+  fi
+
+done
+
 if [ -n "$CI_JOB_TOKEN" ]; then
-    docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-fi
-docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $CI_REGISTRY_IMAGE/$IMAGE:latest
-
-# Try to push tags
-if [ -n "$CI_JOB_TOKEN" ]; then
-    # In GitLab, push must work !
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:latest
-else
-    echo "Trying to push to $CI_REGISTRY_IMAGE ... might fail if not logged in"
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION || true
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:latest || true
+  IMAGES=$(docker images | grep $DOCKER_HUB_ORGANIZATION | head | awk '{print $1 ":" $2}' | tr '\n' ' ')
+  docker manifest create $DOCKER_HUB_ORGANIZATION/${IMAGE}:latest $IMAGES
+  docker manifest push -p $DOCKER_HUB_ORGANIZATION/${IMAGE}:latest
+  docker rmi $IMAGES
 fi
