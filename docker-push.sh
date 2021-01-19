@@ -22,7 +22,7 @@ for architecture in $ARCHS; do
 done
 
 if [ -n "$CI_JOB_TOKEN" ]; then
-  IMAGES=$(docker images | grep "$DOCKER_HUB_ORGANIZATION" | head | awk '{print $1 ":" $2}' | tr '\n' ' ')
+  IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_HUB_ORGANIZATION" | tr '\n' ' ')
   # shellcheck disable=SC2086
   docker manifest create "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:latest $IMAGES
   docker manifest push -p "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:latest
