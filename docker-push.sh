@@ -1,27 +1,33 @@
-#!/bin/sh
-
-set -e
+#!/bin/sh -e
 
 DISTRO=$1
+DOCKER_HUB_REGISTRY="docker.io"
+DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 
-# Retrieve variables from former docker-build.sh
-. ./$DISTRO.conf
+for architecture in $ARCHS; do
+  # Retrieve variables from former docker-build.sh
+  # shellcheck source=/dev/null
+  . ./"${architecture}"-"${DISTRO}".conf
 
-# $CI_REGISTRY_IMAGE/$IMAGE:$VERSION has been built by docker-build.sh
+  if [ -n "$CI_JOB_TOKEN" ]; then
+    echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    docker pull "$CI_REGISTRY_IMAGE"/"${IMAGE:=}":"$VERSION"
 
-# Overwrite the "latest" version too
+    echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
+    docker tag "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION" "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
+    docker push "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
+    docker rmi "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION"
+  else
+    docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
+  fi
+done
+
 if [ -n "$CI_JOB_TOKEN" ]; then
-    docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-fi
-docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $CI_REGISTRY_IMAGE/$IMAGE:latest
-
-# Try to push tags
-if [ -n "$CI_JOB_TOKEN" ]; then
-    # In GitLab, push must work !
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:latest
-else
-    echo "Trying to push to $CI_REGISTRY_IMAGE ... might fail if not logged in"
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION || true
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:latest || true
+  IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_HUB_ORGANIZATION" | tr '\n' ' ')
+  # shellcheck disable=SC2086
+  docker manifest create "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:latest $IMAGES
+  docker manifest push -p "$DOCKER_HUB_REGISTRY_IMAGE"/${IMAGE}:latest
+  for img in $IMAGES; do
+    docker rmi "$img"
+  done
 fi

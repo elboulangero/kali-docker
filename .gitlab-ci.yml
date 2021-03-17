@@ -2,6 +2,9 @@
 variables:
     BASE_DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
     EXTRA_DISTROS: 'kali-experimental kali-bleeding-edge'
+    ARCHS: 'amd64 arm64 armhf'
+    DOCKER_BUILDKIT: '1'
+    DOCKER_CLI_EXPERIMENTAL: 'enabled'
 
 stages:
     - build
@@ -15,16 +18,17 @@ build-rootfs:
     artifacts:
         paths:
             - "*.tar.xz"
+            - "release.version"
+    rules:
+        - if: '$DOCKER_HUB_USER =~ /.+/ && $DOCKER_HUB_ACCESS_TOKEN =~ /.+/'
+          when: on_success
     script: |
         set -e
         apt-get -y update
-        apt-get -y install wget debootstrap
-        KEYRING_PKG_URL=$(wget -q -O - http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
-        KEYRING_PKG_URL="http://http.kali.org/kali/$KEYRING_PKG_URL"
-        wget $KEYRING_PKG_URL
-        dpkg -i kali-archive-keyring_*_all.deb
+        apt-get -y install dirmngr gnupg pixz wget ca-certificates curl \
+          gnupg-agent qemu-user-static debootstrap
         for distro in $BASE_DISTROS; do
-            ./build-rootfs.sh $distro
+            ./build-rootfs.sh "$distro"
         done
 
 build-docker-images:
@@ -32,38 +36,59 @@ build-docker-images:
     image: docker:latest
     services:
         - docker:dind
+    before_script:
+      - BUILDX_URL=$(docker run --rm python:rc-alpine sh -c "pip install --quiet lastversion && lastversion --assets --filter linux-amd64 buildx")
+      - mkdir -p $HOME/.docker/cli-plugins/
+      - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+      - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
     dependencies:
         - build-rootfs
     artifacts:
         paths:
             - "*.conf"
+            - "release.version"
     script: |
         set -e
+        echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
-        apk add git
-        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+        apk add git bash tar pixz
+        echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
-            ./docker-build.sh $distro
+            ./docker-build.sh "$distro"
         done
         for distro in $EXTRA_DISTROS; do
-            ./docker-build-extra.sh $distro
+            ./docker-build-extra.sh "$distro"
         done
 
 test-docker-images:
     stage: test
     image: docker:latest
     services:
-        - docker:dind
+      - name: docker:dind
+        command: ["--experimental"]
     dependencies:
         - build-docker-images
     script: |
         set -e
-        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            . ./$distro.conf || true
-            docker pull $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-            docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION /bin/true
-            docker run $CI_REGISTRY_IMAGE/$IMAGE:$VERSION test -e /etc/dpkg/origins/kali
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+        for architecture in $ARCHS; do
+          case "${architecture}" in
+            amd64) platform="linux/amd64"; plataforma="x86_64" ;;
+            arm64) platform="linux/arm64"; plataforma="aarch64" ;;
+            armhf) platform="linux/arm/7"; plataforma="armv7l" ;;
+          esac
+          for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+              . ./"${architecture}-${distro}".conf || true
+              docker pull --platform $platform $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
+              TEST_ARCH=$(docker run --rm $CI_REGISTRY_IMAGE/$IMAGE:$VERSION uname -m)
+              if [[ "${plataforma}" == "$TEST_ARCH" ]]; then
+                echo "OK Architecture correct"
+              else
+                echo "Error: Architecture incorrect"
+                exit 1
+              fi
+          done
         done
 
 push-docker-images:
@@ -76,32 +101,14 @@ push-docker-images:
     script: |
         set -e
         apk update
-        apk add curl jq
-        docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+        apk add curl jq gawk
+        RELEASE=$(cat ./release.version)
+        # Push images Docker Hub
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            ./docker-push.sh $distro
+            ./docker-push.sh "$distro"
         done
-        # Login to docker hub and push there too
-        DOCKER_HUB_REGISTRY="docker.io"
-        DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
-        docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_ACCESS_TOKEN $DOCKER_HUB_REGISTRY
+        #
+        # Clean tags.
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            . ./$distro.conf || true
-            docker tag $CI_REGISTRY_IMAGE/$IMAGE:latest $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:latest
-            docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:latest
-
-            # XXX: We don't push the versioned image because we are not
-            # able to cleanup old images and "docker pull" will fetch all
-            # versions of a given image...
-            # Don't push
-            #docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
-            #docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
-            # This operation is currently failing with "The operation
-            # is unsupported.".
-            #./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE
+          ./docker-cleanup.sh "$distro"
         done
-
-# TODO: clean up old images that accumulate in gitlab's container registry too...
-# https://docs.gitlab.com/ee/api/container_registry.html#list-registry-repositories
-# https://docs.gitlab.com/ee/api/container_registry.html#list-repository-tags
-# https://docs.gitlab.com/ee/api/container_registry.html#delete-a-repository-tag
