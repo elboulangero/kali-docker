@@ -6,6 +6,14 @@ distro=$1
 architecture=$2
 mirror=${3:-http://http.kali.org/kali}
 
+work_dir=rootfs-$distro-$architecture
+
+rootfs_chroot() {
+    PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+        chroot "$work_dir" "$@"
+}
+
+
 if [ ! -e /usr/share/debootstrap/scripts/$distro ]; then
     echo "ERROR: debootstrap has no script for $distro"
     echo "ERROR: use a newer debootstrap"
@@ -18,12 +26,15 @@ if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
     exit 1
 fi
 
-work_dir="$architecture/$distro"
-rm -rf "$architecture" || true
-mkdir -p "$architecture"
+rm -rf "$work_dir" "$architecture.$distro.tar.xz"
+
 qemu-debootstrap --variant=minbase --components=main,contrib,non-free \
-    --arch="$architecture" --include=kali-archive-keyring,kali-defaults \
+    --arch="$architecture" --include=kali-archive-keyring \
     "$distro" "$work_dir" "$mirror"
+
+rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
+
+rootfs_chroot apt-get clean
 
 cat > "$work_dir/usr/sbin/policy-rc.d" <<-'EOF'
 	#!/bin/sh
