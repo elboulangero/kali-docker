@@ -29,7 +29,7 @@ fi
 
 rm -rf "$rootfsDir" "$architecture.$distro.tar.xz"
 
-qemu-debootstrap --variant=minbase --components=main,contrib,non-free \
+debootstrap --variant=minbase --components=main,contrib,non-free \
     --arch="$architecture" --include=kali-archive-keyring \
     "$distro" "$rootfsDir" "$mirror"
 
