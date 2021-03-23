@@ -2,19 +2,6 @@
 
 distro=$1
 mirror=${2:-http://http.kali.org/kali}
-keyring_file="/usr/share/keyrings/kali-archive-keyring.gpg"
-gpg_key="ED444FF07D8D0BF6"
-keyservers=( "keys.gnupg.net" "ha.pool.sks-keyservers.net" )
-
-if [ ! -e $keyring_file ]; then
-  GNUPGHOME="$(mktemp -d)"
-  export GNUPGHOME
-  for server in "${keyservers[@]}"; do
-    gpg --keyring="$keyring_file" --no-default-keyring --keyserver-options timeout=10 \
-      --keyserver "$server" --receive-keys "$gpg_key" && break 2
-  done
-  rm -rf "${GNUPGHOME}"
-fi
 
 for architecture in $ARCHS; do
   work_dir="$architecture/$distro"
@@ -22,7 +9,7 @@ for architecture in $ARCHS; do
   mkdir -p "$architecture"
   qemu-debootstrap --variant=minbase --components=main,contrib,non-free \
     --arch="$architecture" --include=kali-archive-keyring,kali-defaults \
-    --keyring="$keyring_file" "$distro" "$work_dir" "$mirror"
+    "$distro" "$work_dir" "$mirror"
 
   cat > "$work_dir/usr/sbin/policy-rc.d" <<-'EOF'
 	#!/bin/sh
