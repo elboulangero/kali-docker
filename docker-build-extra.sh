@@ -13,9 +13,9 @@ VCS_REF=$(git rev-parse --short HEAD)
 RELEASE_DESCRIPTION="$DISTRO"
 
 case "$ARCHITECTURE" in
-    amd64) plataform="linux/amd64" ;;
-    arm64) plataform="linux/arm64" ;;
-    armhf) plataform="linux/arm/7" ;;
+    amd64) platform="linux/amd64" ;;
+    arm64) platform="linux/arm64" ;;
+    armhf) platform="linux/arm/7" ;;
 esac
 
 # Add repository kali experimental/bleeding-edge in TARBALL
@@ -31,11 +31,11 @@ VERSION="$BUILD_VERSION"
 IMAGE="$DISTRO"
 
 if [ -n "$CI_JOB_TOKEN" ]; then
-    DOCKER_BUILD="docker buildx build --push --platform=$plataform"
+    DOCKER_BUILD="docker buildx build --push --platform=$platform"
 else
     DOCKER_BUILDKIT=1
     export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build --platform=$plataform"
+    DOCKER_BUILD="docker build --platform=$platform"
 fi
 
 $DOCKER_BUILD --progress=plain \

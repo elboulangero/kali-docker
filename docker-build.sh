@@ -13,9 +13,9 @@ VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
 case "$ARCHITECTURE" in
-    amd64) plataform="linux/amd64" ;;
-    arm64) plataform="linux/arm64" ;;
-    armhf) plataform="linux/arm/7" ;;
+    amd64) platform="linux/amd64" ;;
+    arm64) platform="linux/arm64" ;;
+    armhf) platform="linux/arm/7" ;;
 esac
 
 case "$DISTRO" in
@@ -32,7 +32,7 @@ case "$DISTRO" in
 esac
 
 if [ -n "$CI_JOB_TOKEN" ]; then
-    DOCKER_BUILD="docker buildx build --push --platform=$plataform"
+    DOCKER_BUILD="docker buildx build --push --platform=$platform"
 else
     DOCKER_BUILDKIT=1
     export DOCKER_BUILDKIT
