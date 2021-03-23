@@ -3,19 +3,19 @@
 set -e
 
 DISTRO=$1
-architecture=$2
+ARCHITECTURE=$2
 DOCKER_HUB_REGISTRY="docker.io"
 DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 
 # Retrieve variables from former docker-build.sh
 # shellcheck source=/dev/null
-. ./"${architecture}"-"${DISTRO}".conf
+. ./"${ARCHITECTURE}"-"${DISTRO}".conf
 
 if [ -n "$CI_JOB_TOKEN" ]; then
     docker pull "$CI_REGISTRY_IMAGE"/"${IMAGE:=}":"$VERSION"
 
-    docker tag "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION" "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
-    docker push "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
+    docker tag "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION" "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$ARCHITECTURE"
+    docker push "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$ARCHITECTURE"
     docker rmi "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION"
 else
     docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
