@@ -7,6 +7,7 @@ architecture=$2
 mirror=${3:-http://http.kali.org/kali}
 
 rootfsDir=rootfs-$distro-$architecture
+debootstrap=${DEBOOTSTRAP:-debootstrap}
 
 rootfs_chroot() {
     PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
@@ -36,6 +37,7 @@ rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
 
 rootfs_chroot apt-get clean
 
+# Inspired by /usr/share/docker.io/contrib/mkimage/debootstrap
 cat > "$rootfsDir/usr/sbin/policy-rc.d" <<-'EOF'
 	#!/bin/sh
 	exit 101
@@ -47,6 +49,7 @@ echo 'force-unsafe-io' > "$rootfsDir"/etc/dpkg/dpkg.cfg.d/docker-apt-speedup
 aptGetClean='"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";'
 cat > "$rootfsDir"/etc/apt/apt.conf.d/docker-clean <<-EOF
 	DPkg::Post-Invoke { ${aptGetClean} };
+
 	Dir::Cache::pkgcache "";
 	Dir::Cache::srcpkgcache "";
 EOF
