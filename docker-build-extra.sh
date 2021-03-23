@@ -10,7 +10,6 @@ BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 BUILD_VERSION=$(date -u +"%Y-%m-%d")
 VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
-RELEASE_DESCRIPTION="$DISTRO"
 
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64" ;;
@@ -27,8 +26,9 @@ pixz -1 "$ARCHITECTURE".kali-rolling.tar "$ARCHITECTURE.$DISTRO".tar.xz
 rm -f "$ARCHITECTURE".kali-rolling.tar || true
 
 TARBALL="$ARCHITECTURE.$DISTRO.tar.xz"
-VERSION="$BUILD_VERSION"
 IMAGE="$DISTRO"
+VERSION="$BUILD_VERSION"
+RELEASE_DESCRIPTION="$DISTRO"
 
 if [ -n "$CI_JOB_TOKEN" ]; then
     DOCKER_CLI_EXPERIMENTAL=enabled
