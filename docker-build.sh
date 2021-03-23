@@ -34,11 +34,11 @@ esac
 if [ -n "$CI_JOB_TOKEN" ]; then
     DOCKER_CLI_EXPERIMENTAL=enabled
     export DOCKER_CLI_EXPERIMENTAL
-    DOCKER_BUILD="docker buildx build --push --platform=$platform"
+    DOCKER_BUILD="docker buildx build --pull --platform=$platform -o=type=image,push=false"
 else
     DOCKER_BUILDKIT=1
     export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build --platform=$platform"
+    DOCKER_BUILD="docker build --pull --platform=$platform"
 fi
 
 $DOCKER_BUILD --progress=plain \
