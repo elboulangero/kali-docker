@@ -60,12 +60,9 @@ EOF
 
 echo 'Apt::AutoRemove::SuggestsImportant "false";' >"$work_dir"/etc/apt/apt.conf.d/docker-autoremove-suggests
 
-rm -rf "$work_dir"/usr/bin/qemu-* || true
-rm -rf "$work_dir"/var/lib/apt/lists/* || true
-rm -rf "$work_dir"/var/cache/apt/*.bin || true
-rm -rf "$work_dir"/var/cache/apt/archives/*.deb || true
-find "$work_dir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
+rm -rf "$work_dir"/var/lib/apt/lists/*
 mkdir -p "$work_dir"/var/lib/apt/lists/partial
+find "$work_dir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 
 echo "Creating ${architecture}.${distro}.tar.xz"
 tar -I 'pixz -1' -C "$work_dir" -pcf "${architecture}.${distro}".tar.xz .
