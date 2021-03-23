@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
 distro=$1
-mirror=${2:-http://http.kali.org/kali}
+architecture=$2
+mirror=${3:-http://http.kali.org/kali}
 
 if [ ! -e /usr/share/debootstrap/scripts/$distro ]; then
     echo "ERROR: debootstrap has no script for $distro"
@@ -15,7 +16,6 @@ if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
     exit 1
 fi
 
-for architecture in $ARCHS; do
   work_dir="$architecture/$distro"
   rm -rf "$architecture" || true
   mkdir -p "$architecture"
@@ -65,5 +65,3 @@ EOF
   if [ "$distro" = "kali-last-snapshot" ]; then
     awk -F= '$1=="VERSION" { print $2 ;}' "$work_dir"/usr/lib/os-release | tr -d '"' > release.version
   fi
-
-done

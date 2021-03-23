@@ -1,10 +1,10 @@
 #!/bin/sh -e
 
 DISTRO=$1
+architecture=$2
 DOCKER_HUB_REGISTRY="docker.io"
 DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 
-for architecture in $ARCHS; do
   # Retrieve variables from former docker-build.sh
   # shellcheck source=/dev/null
   . ./"${architecture}"-"${DISTRO}".conf
@@ -18,7 +18,10 @@ for architecture in $ARCHS; do
   else
     docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
   fi
-done
+
+# XXX Enable docker manifest part again?
+
+exit
 
 if [ -n "$CI_JOB_TOKEN" ]; then
   IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_HUB_ORGANIZATION" | tr '\n' ' ')

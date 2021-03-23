@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 DISTRO=$1
+architecture=$2
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -8,7 +9,6 @@ BUILD_VERSION=$(date -u +"%Y-%m-%d")
 VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
-for architecture in $ARCHS; do
   TARBALL="${architecture}.${1}.tar.xz"
   case "${architecture}" in
     amd64) plataform="linux/amd64" ;;
@@ -51,5 +51,3 @@ CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
 VERSION="$VERSION-${architecture}"
 END
-
-done
