@@ -69,3 +69,7 @@ find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 
 echo "Creating ${architecture}.${distro}.tar.xz"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "${architecture}.${distro}".tar.xz .
+
+if [ "$distro" = "kali-last-snapshot" ]; then
+    $(. "$rootfsDir"/etc/os-release; echo "$VERSION") > "${architecture}.${distro}".release.version
+fi

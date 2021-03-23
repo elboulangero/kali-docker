@@ -18,7 +18,7 @@ build-rootfs:
     artifacts:
         paths:
             - "*.tar.xz"
-            - "release.version"
+            - "*.release.version"
     script: |
         set -e
         apt-get -y update
@@ -49,7 +49,7 @@ build-docker-images:
     artifacts:
         paths:
             - "*.conf"
-            - "release.version"
+            - "*.release.version"
     script: |
         set -e
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
@@ -111,7 +111,6 @@ push-docker-images:
         apk add curl jq gawk
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
-        RELEASE=$(cat ./release.version)
         # Push images Docker Hub
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             for arch in $ARCHS; do
