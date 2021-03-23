@@ -3,7 +3,7 @@
 set -e
 
 DISTRO=$1
-architecture=$2
+ARCHITECTURE=$2
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -11,8 +11,8 @@ BUILD_VERSION=$(date -u +"%Y-%m-%d")
 VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
-TARBALL="${architecture}.${1}.tar.xz"
-case "${architecture}" in
+TARBALL="${ARCHITECTURE}.${1}.tar.xz"
+case "${ARCHITECTURE}" in
     amd64) plataform="linux/amd64" ;;
     arm64) plataform="linux/arm64" ;;
     armhf) plataform="linux/arm/7" ;;
@@ -39,7 +39,7 @@ else
 fi
 
 $DOCKER_BUILD --progress=plain \
-    -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-${architecture}" \
+    -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-${ARCHITECTURE}" \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
     --build-arg VERSION="$VERSION" \
@@ -48,8 +48,8 @@ $DOCKER_BUILD --progress=plain \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
     .
 
-cat >"${architecture}-$DISTRO".conf <<END
+cat >"${ARCHITECTURE}-$DISTRO".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
-VERSION="$VERSION-${architecture}"
+VERSION="$VERSION-${ARCHITECTURE}"
 END
