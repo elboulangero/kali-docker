@@ -115,8 +115,8 @@ push-docker-images:
             done
         done
         # Clean tags
-        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            for arch in $ARCHS; do
-                ./docker-cleanup.sh "$distro" "$arch"
-            done
-        done
+        #for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+        #    for arch in $ARCHS; do
+        #        ./docker-cleanup.sh "$distro" "$arch"
+        #    done
+        #done
