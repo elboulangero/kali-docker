@@ -76,23 +76,23 @@ test-docker-images:
         set -e
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-        for architecture in $ARCHS; do
-          case "$architecture" in
-            amd64) platform="linux/amd64"; plataforma="x86_64" ;;
-            arm64) platform="linux/arm64"; plataforma="aarch64" ;;
-            armhf) platform="linux/arm/7"; plataforma="armv7l" ;;
-          esac
-          for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-              . ./"${architecture}-${distro}".conf || true
-              docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
-              TEST_ARCH=$(docker run --rm "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
-              if [[ "$plataforma" == "$TEST_ARCH" ]]; then
-                echo "OK Architecture correct"
-              else
-                echo "Error: Architecture incorrect"
-                exit 1
-              fi
-          done
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+            for arch in $ARCHS; do
+                . ./$arch-$distro.conf || true
+                case $arch in
+                    amd64) platform="linux/amd64"; machine="x86_64" ;;
+                    arm64) platform="linux/arm64"; machine="aarch64" ;;
+                    armhf) platform="linux/arm/7"; machine="armv7l" ;;
+                esac
+                docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
+                TEST_ARCH=$(docker run --rm "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
+                if [[ "$machine" == "$TEST_ARCH" ]]; then
+                    echo "OK: Architecture correct"
+                else
+                    echo "ERROR: Architecture incorrect"
+                    exit 1
+                fi
+            done
         done
 
 push-docker-images:
