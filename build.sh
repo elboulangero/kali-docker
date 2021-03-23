@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
 
 DISTROS="${*:-kali-rolling}" # DISTROS="kali-rolling kali-dev kali-last-snapshot"
 ARCHS="amd64" # ARCHS="amd64 arm64 armhf"

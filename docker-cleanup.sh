@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!/bin/bash
+
+set -e
 
 if [ "$1" = "kali-last-snapshot" ]; then
   REPO=kali
