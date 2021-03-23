@@ -69,12 +69,3 @@ find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 
 echo "Creating ${architecture}.${distro}.tar.xz"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "${architecture}.${distro}".tar.xz .
-
-if [ -z "$CI_JOB_TOKEN" ]; then
-    chmod 775 "${architecture}.${distro}".tar.xz
-    rm -rf "${architecture}"
-fi
-
-if [ "$distro" = "kali-last-snapshot" ]; then
-    awk -F= '$1=="VERSION" { print $2 ;}' "$rootfsDir"/usr/lib/os-release | tr -d '"' > release.version
-fi
