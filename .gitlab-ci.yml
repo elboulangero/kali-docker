@@ -105,7 +105,7 @@ push-docker-images:
     script: |
         set -e
         apk update
-        apk add curl jq gawk
+        apk add bash curl jq gawk
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
         # Push images Docker Hub
