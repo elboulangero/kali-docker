@@ -32,11 +32,13 @@ case "$DISTRO" in
 esac
 
 if [ -n "$CI_JOB_TOKEN" ]; then
+    DOCKER_CLI_EXPERIMENTAL=enabled
+    export DOCKER_CLI_EXPERIMENTAL
     DOCKER_BUILD="docker buildx build --push --platform=$platform"
 else
     DOCKER_BUILDKIT=1
     export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build"
+    DOCKER_BUILD="docker build --platform=$platform"
 fi
 
 $DOCKER_BUILD --progress=plain \

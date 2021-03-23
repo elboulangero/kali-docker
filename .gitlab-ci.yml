@@ -3,8 +3,6 @@ variables:
     BASE_DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
     EXTRA_DISTROS: 'kali-experimental kali-bleeding-edge'
     ARCHS: 'amd64 arm64 armhf'
-    DOCKER_BUILDKIT: '1'
-    DOCKER_CLI_EXPERIMENTAL: 'enabled'
 
 stages:
     - build

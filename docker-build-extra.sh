@@ -31,6 +31,8 @@ VERSION="$BUILD_VERSION"
 IMAGE="$DISTRO"
 
 if [ -n "$CI_JOB_TOKEN" ]; then
+    DOCKER_CLI_EXPERIMENTAL=enabled
+    export DOCKER_CLI_EXPERIMENTAL
     DOCKER_BUILD="docker buildx build --push --platform=$platform"
 else
     DOCKER_BUILDKIT=1

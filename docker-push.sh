@@ -22,6 +22,7 @@ else
 fi
 
 # XXX Enable docker manifest part again?
+# XXX According to the doc, it requires DOCKER_CLI_EXPERIMENTAL=enabled
 
 exit
 
