@@ -19,9 +19,6 @@ build-rootfs:
         paths:
             - "*.tar.xz"
             - "release.version"
-    rules:
-        - if: '$DOCKER_HUB_USER =~ /.+/ && $DOCKER_HUB_ACCESS_TOKEN =~ /.+/'
-          when: on_success
     script: |
         set -e
         apt-get -y update
