@@ -20,14 +20,19 @@ build-rootfs:
     script: |
         set -e
         apt-get -y update
-        apt-get -y install debootstrap qemu-user-static wget
-        KEYRING_PKG_URL=$(wget -q -O - http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+        apt-get -y install debootstrap pixz qemu-user-static wget
+        KEYRING_PKG_URL=$(wget -q -O - \
+            http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
+            | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
         KEYRING_PKG_URL="http://http.kali.org/kali/$KEYRING_PKG_URL"
         wget $KEYRING_PKG_URL
         dpkg -i kali-archive-keyring_*_all.deb
-        rm -f kali-archive-keyring_*_all.deb
+        rm kali-archive-keyring_*_all.deb
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
+                echo "========================================"
+                echo "Building rootfs $distro/$arch"
+                echo "========================================"
                 ./build-rootfs.sh "$distro" "$arch"
             done
         done
