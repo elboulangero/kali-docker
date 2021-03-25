@@ -8,7 +8,7 @@ TARBALL=$ARCHITECTURE.$DISTRO.tar.xz
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-BUILD_VERSION=$(date -u +"%Y-%m-%d")
+BUILD_VERSION=$(date -u +"%Y.%m.%d")
 VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
