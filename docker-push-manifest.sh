@@ -16,11 +16,11 @@ for arch in $ARCHITECTURES; do
     I=${I:-$IMAGE}
     V=${V:-$VERSION}
     if [ "$I" != "$IMAGE" ]; then
-        echo "ERROR: image mismatch, '$I' != '$IMAGE'"
+        echo >&2 "ERROR: image mismatch, '$I' != '$IMAGE'"
         exit 1
     fi
     if [ "$V" != "$VERSION" ]; then
-        echo "ERROR: version mismatch, '$V' != '$VERSION'"
+        echo >&2 "ERROR: version mismatch, '$V' != '$VERSION'"
         exit 1
     fi
 done

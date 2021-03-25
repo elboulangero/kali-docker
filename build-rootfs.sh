@@ -19,14 +19,14 @@ rootfs_chroot() {
 
 
 if [ ! -e /usr/share/debootstrap/scripts/$distro ]; then
-    echo "ERROR: debootstrap has no script for $distro"
-    echo "ERROR: use a newer debootstrap"
+    echo >&2 "ERROR: debootstrap has no script for $distro"
+    echo >&2 "ERROR: use a newer debootstrap"
     exit 1
 fi
 
 if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
-    echo "ERROR: you need /usr/share/keyrings/kali-archive-keyring.gpg"
-    echo "ERROR: install kali-archive-keyring"
+    echo >&2 "ERROR: you need /usr/share/keyrings/kali-archive-keyring.gpg"
+    echo >&2 "ERROR: install kali-archive-keyring"
     exit 1
 fi
 

@@ -22,6 +22,6 @@ TEST_ARCH=$(docker run --rm --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$T
 if [ "$machine" == "$TEST_ARCH" ]; then
     echo "OK: Architecture correct"
 else
-    echo "ERROR: Architecture incorrect"
+    echo >&2 "ERROR: Architecture incorrect"
     exit 1
 fi
