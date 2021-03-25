@@ -51,7 +51,7 @@ build-docker-images:
         set -e
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
-        apk add git bash tar pixz
+        apk add bash git tar
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
