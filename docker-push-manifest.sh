@@ -12,7 +12,7 @@ ARCHITECTURES=$2
 I=
 V=
 for arch in $ARCHITECTURES; do
-    . ./"$arch"-"$DISTRO".conf
+    . ./"$DISTRO"-"$arch".conf
     I=${I:-$IMAGE}
     V=${V:-$VERSION}
     if [ "$I" != "$IMAGE" ]; then

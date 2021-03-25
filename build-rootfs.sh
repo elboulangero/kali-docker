@@ -7,6 +7,9 @@ architecture=$2
 mirror=${3:-http://http.kali.org/kali}
 
 rootfsDir=rootfs-$distro-$architecture
+tarball=$distro-$architecture.tar.xz
+versionFile=$distro-$architecture.release.version
+
 debootstrap=${DEBOOTSTRAP:-debootstrap}
 
 rootfs_chroot() {
@@ -27,7 +30,7 @@ if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
     exit 1
 fi
 
-rm -rf "$rootfsDir" "$architecture.$distro.tar.xz"
+rm -rf "$rootfsDir" "$tarball"
 
 debootstrap --variant=minbase --components=main,contrib,non-free \
     --arch="$architecture" --include=kali-archive-keyring \
@@ -67,9 +70,9 @@ rm -rf "$rootfsDir"/var/lib/apt/lists/*
 mkdir -p "$rootfsDir"/var/lib/apt/lists/partial
 find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 
-echo "Creating ${architecture}.${distro}.tar.xz"
-tar -I 'pixz -1' -C "$rootfsDir" -pcf "${architecture}.${distro}".tar.xz .
+echo "Creating $tarball"
+tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
 if [ "$distro" = "kali-last-snapshot" ]; then
-    $(. "$rootfsDir"/etc/os-release; echo "$VERSION") > "${architecture}.${distro}".release.version
+    $(. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
 fi

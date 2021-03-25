@@ -9,7 +9,7 @@ DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 
 # Retrieve variables from former docker-build.sh
 # shellcheck source=/dev/null
-. ./"$ARCHITECTURE"-"$DISTRO".conf
+. ./"$DISTRO"-"$ARCHITECTURE".conf
 
 # Pull image
 if [ -n "$CI_JOB_TOKEN" ]; then

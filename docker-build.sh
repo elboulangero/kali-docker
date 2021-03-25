@@ -4,7 +4,8 @@ set -e
 
 DISTRO=$1
 ARCHITECTURE=$2
-TARBALL=$ARCHITECTURE.$DISTRO.tar.xz
+TARBALL=$DISTRO-$ARCHITECTURE.tar.xz
+VERSIONFILE=$DISTRO-$ARCHITECTURE.release.version
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -21,7 +22,7 @@ esac
 case "$DISTRO" in
     kali-last-snapshot)
 	IMAGE=kali
-	VERSION=$(cat $ARCHITECTURE.$DISTRO.release.version)
+	VERSION=$(cat $VERSIONFILE)
 	RELEASE_DESCRIPTION="$VERSION"
 	;;
     *)
@@ -52,7 +53,7 @@ if [ -n "$CI_JOB_TOKEN" ]; then
     docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-cat >"$ARCHITECTURE-$DISTRO".conf <<END
+cat >"$DISTRO-$ARCHITECTURE".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
 TAG="$TAG"

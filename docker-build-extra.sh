@@ -6,7 +6,7 @@ DISTRO=$1
 ARCHITECTURE=$2
 
 # Build the same version as for kali-rolling
-VERSION=$(. ./$ARCHITECTURE-kali-rolling.conf; echo $VERSION)
+VERSION=$(. ./kali-rolling-$ARCHITECTURE.conf; echo $VERSION)
 IMAGE=$DISTRO
 
 case "$ARCHITECTURE" in
@@ -33,7 +33,7 @@ if [ -n "$CI_JOB_TOKEN" ]; then
     docker push $CI_REGISTRY_IMAGE/$IMAGE:$TAG
 fi
 
-cat >$ARCHITECTURE-$DISTRO.conf <<END
+cat >$DISTRO-$ARCHITECTURE.conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
 TAG="$TAG"

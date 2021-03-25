@@ -6,7 +6,7 @@ DISTRO=$1
 ARCHITECTURE=$2
 
 # Retrieve variables from former docker-build.sh
-. ./"$ARCHITECTURE"-"$DISTRO".conf
+. ./"$DISTRO"-"$ARCHITECTURE".conf
 
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64"; machine="x86_64" ;;
