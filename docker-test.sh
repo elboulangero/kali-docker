@@ -20,7 +20,7 @@ if [ -n "$CI_JOB_TOKEN" ]; then
     docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
 fi
 
-TEST_ARCH=$(docker run --rm "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
+TEST_ARCH=$(docker run --rm --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
 if [ "$machine" == "$TEST_ARCH" ]; then
     echo "OK: Architecture correct"
 else
