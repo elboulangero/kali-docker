@@ -12,27 +12,27 @@ DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 . ./"$ARCHITECTURE"-"$DISTRO".conf
 
 if [ -n "$CI_JOB_TOKEN" ]; then
-    docker pull "$CI_REGISTRY_IMAGE"/"$IMAGE":"$VERSION"
+    docker pull "$CI_REGISTRY_IMAGE"/"$IMAGE":"$TAG"
 fi
-docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
+docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$TAG" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
 
 # Push to GitLab registry
 if [ -n "$CI_JOB_TOKEN" ]; then
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
+    docker push $CI_REGISTRY_IMAGE/$IMAGE:$TAG
     docker push $CI_REGISTRY_IMAGE/$IMAGE:latest
 fi
 
 # Push to Docher Hub registry
 if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
-    docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:$VERSION "$DOCKER_HUB_ORGANIZATION"/$IMAGE:"$ARCHITECTURE"
+    docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:$TAG "$DOCKER_HUB_ORGANIZATION"/$IMAGE:"$ARCHITECTURE"
     docker push "$DOCKER_HUB_ORGANIZATION"/$IMAGE:"$ARCHITECTURE"
 
     # XXX: We don't push the versioned image because we are not
     # able to cleanup old images and "docker pull" will fetch all
     # versions of a given image...
     # Don't push
-    #docker tag $CI_REGISTRY_IMAGE/$IMAGE:$VERSION $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
-    #docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$VERSION
+    #docker tag $CI_REGISTRY_IMAGE/$IMAGE:$TAG $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$TAG
+    #docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$TAG
     # This operation is currently failing with "The operation
     # is unsupported.".
     #./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE

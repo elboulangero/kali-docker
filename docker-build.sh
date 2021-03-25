@@ -41,6 +41,8 @@ else
     DOCKER_BUILD="docker build"
 fi
 
+TAG=$VERSION-$ARCHITECTURE
+
 $DOCKER_BUILD \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
@@ -51,16 +53,16 @@ $DOCKER_BUILD \
     --platform "$platform" \
     --progress plain \
     --pull \
-    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE" \
+    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
 if [ -n "$CI_JOB_TOKEN" ]; then
     # Push the image so that subsequent jobs can fetch it
-    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE"
+    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
 cat >"$ARCHITECTURE-$DISTRO".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
-VERSION="$VERSION-$ARCHITECTURE"
+TAG="$TAG"
 END

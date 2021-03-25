@@ -5,8 +5,6 @@ set -e
 DISTRO=$1
 ARCHITECTURE=$2
 
-CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
-
 # Retrieve variables from former docker-build.sh
 . ./"$ARCHITECTURE"-"$DISTRO".conf
 
@@ -17,10 +15,10 @@ case "$ARCHITECTURE" in
 esac
 
 if [ -n "$CI_JOB_TOKEN" ]; then
-    docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
+    docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-TEST_ARCH=$(docker run --rm --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
+TEST_ARCH=$(docker run --rm --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" uname -m)
 if [ "$machine" == "$TEST_ARCH" ]; then
     echo "OK: Architecture correct"
 else
