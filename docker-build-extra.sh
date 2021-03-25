@@ -53,6 +53,11 @@ $DOCKER_BUILD \
     --tag "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE" \
     .
 
+if [ -n "$CI_JOB_TOKEN" ]; then
+    # Push the image so that subsequent jobs can fetch it
+    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE"
+fi
+
 cat >"$ARCHITECTURE-$DISTRO".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
