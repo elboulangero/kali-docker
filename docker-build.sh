@@ -21,15 +21,15 @@ esac
 
 case "$DISTRO" in
     kali-last-snapshot)
-	IMAGE=kali
-	VERSION=$(cat $VERSIONFILE)
-	RELEASE_DESCRIPTION="$VERSION"
-	;;
+        IMAGE=kali
+        VERSION=$(cat $VERSIONFILE)
+        RELEASE_DESCRIPTION="$VERSION"
+        ;;
     *)
-	IMAGE="$DISTRO"
-	VERSION="$BUILD_VERSION"
-	RELEASE_DESCRIPTION="$DISTRO"
-	;;
+        IMAGE="$DISTRO"
+        VERSION="$BUILD_VERSION"
+        RELEASE_DESCRIPTION="$DISTRO"
+        ;;
 esac
 
 TAG=$VERSION-$ARCHITECTURE
