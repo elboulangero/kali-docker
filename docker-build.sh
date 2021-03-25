@@ -41,15 +41,17 @@ else
     DOCKER_BUILD="docker build"
 fi
 
-$DOCKER_BUILD --progress=plain \
-    --pull --platform="$platform" \
-    -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE" \
+$DOCKER_BUILD \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
     --build-arg VERSION="$VERSION" \
     --build-arg VCS_URL="$VCS_URL" \
     --build-arg VCS_REF="$VCS_REF" \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
+    --platform "$platform" \
+    --progress plain \
+    --pull \
+    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE" \
     .
 
 cat >"$ARCHITECTURE-$DISTRO".conf <<END
