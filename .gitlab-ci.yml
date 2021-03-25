@@ -83,20 +83,7 @@ test-docker-images:
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             for arch in $ARCHS; do
-                . ./$arch-$distro.conf || true
-                case $arch in
-                    amd64) platform="linux/amd64"; machine="x86_64" ;;
-                    arm64) platform="linux/arm64"; machine="aarch64" ;;
-                    armhf) platform="linux/arm/7"; machine="armv7l" ;;
-                esac
-                docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
-                TEST_ARCH=$(docker run --rm "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" uname -m)
-                if [[ "$machine" == "$TEST_ARCH" ]]; then
-                    echo "OK: Architecture correct"
-                else
-                    echo "ERROR: Architecture incorrect"
-                    exit 1
-                fi
+                ./docker-test.sh "$distro" "$arch"
             done
         done
 

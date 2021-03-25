@@ -14,6 +14,7 @@ for distro in $DISTROS; do
         echo "========================================"
         sudo ./build-rootfs.sh "$distro" "$arch"
         sudo ./docker-build.sh "$distro" "$arch"
+        sudo ./docker-test.sh  "$distro" "$arch"
         sudo ./docker-push.sh  "$distro" "$arch"
     done
 done
