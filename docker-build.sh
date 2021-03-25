@@ -34,14 +34,15 @@ esac
 if [ -n "$CI_JOB_TOKEN" ]; then
     DOCKER_CLI_EXPERIMENTAL=enabled
     export DOCKER_CLI_EXPERIMENTAL
-    DOCKER_BUILD="docker buildx build --pull --platform=$platform -o=type=image,push=false"
+    DOCKER_BUILD="docker buildx build --output=type=image,push=false"
 else
     DOCKER_BUILDKIT=1
     export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build --pull --platform=$platform"
+    DOCKER_BUILD="docker build"
 fi
 
 $DOCKER_BUILD --progress=plain \
+    --pull --platform="$platform" \
     -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-$ARCHITECTURE" \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
