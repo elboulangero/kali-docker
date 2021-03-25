@@ -47,7 +47,6 @@ build-docker-images:
     artifacts:
         paths:
             - "*.conf"
-            - "*.release.version"
     script: |
         set -e
         BUILDX_URL=$(docker run --rm python:rc-alpine sh -c "pip install --quiet lastversion && lastversion --assets --filter linux-amd64 buildx")
