@@ -49,10 +49,6 @@ build-docker-images:
             - "*.conf"
     script: |
         set -e
-        BUILDX_URL=$(docker run --rm python:rc-alpine sh -c "pip install --quiet lastversion && lastversion --assets --filter linux-amd64 buildx")
-        mkdir -p $HOME/.docker/cli-plugins/
-        wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
-        chmod a+x $HOME/.docker/cli-plugins/docker-buildx
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
         apk add git bash tar pixz

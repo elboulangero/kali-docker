@@ -30,19 +30,10 @@ IMAGE="$DISTRO"
 VERSION="$BUILD_VERSION"
 RELEASE_DESCRIPTION="$DISTRO"
 
-if [ -n "$CI_JOB_TOKEN" ]; then
-    DOCKER_CLI_EXPERIMENTAL=enabled
-    export DOCKER_CLI_EXPERIMENTAL
-    DOCKER_BUILD="docker buildx build --output=type=image,push=false"
-else
-    DOCKER_BUILDKIT=1
-    export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build"
-fi
-
 TAG=$VERSION-$ARCHITECTURE
 
-$DOCKER_BUILD \
+export DOCKER_BUILDKIT=1
+docker build \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
     --build-arg VERSION="$VERSION" \
