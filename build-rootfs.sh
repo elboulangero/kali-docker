@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -u
 
 distro=$1
 architecture=$2

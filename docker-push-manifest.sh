@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -u
 
 DISTRO=$1
 ARCHITECTURES=$2
