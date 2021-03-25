@@ -11,16 +11,18 @@ DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
 # shellcheck source=/dev/null
 . ./"$ARCHITECTURE"-"$DISTRO".conf
 
+# Pull image
 if [ -n "$CI_JOB_TOKEN" ]; then
     docker pull "$CI_REGISTRY_IMAGE"/"$IMAGE":"$TAG"
 fi
-docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$TAG" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
 
-# Push to GitLab registry
-if [ -n "$CI_JOB_TOKEN" ]; then
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:$TAG
-    docker push $CI_REGISTRY_IMAGE/$IMAGE:latest
-fi
+# Update manifests for GitLab
+docker manifest create \
+    "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" \
+    --amend "$CI_REGISTRY_IMAGE"/"$IMAGE":"$TAG"
+docker manifest create \
+    "$CI_REGISTRY_IMAGE"/$IMAGE:latest \
+    --amend "$CI_REGISTRY_IMAGE"/"$IMAGE":"$TAG"
 
 # Push to Docher Hub registry
 if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
@@ -33,22 +35,12 @@ if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
     # Don't push
     #docker tag $CI_REGISTRY_IMAGE/$IMAGE:$TAG $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$TAG
     #docker push $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$TAG
-    # This operation is currently failing with "The operation
-    # is unsupported.".
+
+    # This operation is currently failing with "The operation is unsupported.".
     #./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE
 fi
 
-# XXX Enable docker manifest part again?
-# XXX According to the doc, it requires DOCKER_CLI_EXPERIMENTAL=enabled
-
-exit
-
-if [ -n "$CI_JOB_TOKEN" ]; then
-    IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_HUB_ORGANIZATION" | tr '\n' ' ')
-    # shellcheck disable=SC2086
-    docker manifest create "$DOCKER_HUB_ORGANIZATION"/$IMAGE:latest $IMAGES
-    docker manifest push -p "$DOCKER_HUB_REGISTRY_IMAGE"/$IMAGE:latest
-    for img in $IMAGES; do
-	docker rmi "$img"
-    done
-fi
+# Update manifest for Docker Hub
+docker manifest create \
+    "$DOCKER_HUB_ORGANIZATION"/$IMAGE:latest \
+    --amend "$DOCKER_HUB_ORGANIZATION"/$IMAGE:"$ARCHITECTURE"

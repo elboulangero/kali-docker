@@ -17,4 +17,5 @@ for distro in $DISTROS; do
         sudo ./docker-test.sh  "$distro" "$arch"
         sudo ./docker-push.sh  "$distro" "$arch"
     done
+    sudo ./docker-push-manifest.sh "$distro" "$arch"
 done

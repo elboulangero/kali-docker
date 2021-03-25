@@ -99,11 +99,13 @@ push-docker-images:
         apk add bash curl jq gawk
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
-        # Push images Docker Hub
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             for arch in $ARCHS; do
                 ./docker-push.sh "$distro" "$arch"
             done
+        done
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+            ./docker-push-manifest.sh "$distro" "$ARCHS"
         done
         # Clean tags
         #for distro in $BASE_DISTROS $EXTRA_DISTROS; do
