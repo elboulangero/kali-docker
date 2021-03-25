@@ -11,15 +11,13 @@ rootfsDir=rootfs-$distro-$architecture
 tarball=$distro-$architecture.tar.xz
 versionFile=$distro-$architecture.release.version
 
-debootstrap=${DEBOOTSTRAP:-debootstrap}
-
 rootfs_chroot() {
     PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
         chroot "$rootfsDir" "$@"
 }
 
 
-if [ ! -e /usr/share/debootstrap/scripts/$distro ]; then
+if [ ! -e /usr/share/debootstrap/scripts/"$distro" ]; then
     echo >&2 "ERROR: debootstrap has no script for $distro"
     echo >&2 "ERROR: use a newer debootstrap"
     exit 1
@@ -75,5 +73,6 @@ echo "Creating $tarball"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
 if [ "$distro" = "kali-last-snapshot" ]; then
-    $(. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
+    # shellcheck source=/dev/null
+    (. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
 fi

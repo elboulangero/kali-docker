@@ -23,7 +23,7 @@ esac
 case "$DISTRO" in
     kali-last-snapshot)
         IMAGE=kali
-        VERSION=$(cat $VERSIONFILE)
+        VERSION=$(cat "$VERSIONFILE")
         RELEASE_DESCRIPTION="$VERSION"
         ;;
     *)

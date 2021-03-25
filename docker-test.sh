@@ -7,6 +7,7 @@ DISTRO=$1
 ARCHITECTURE=$2
 
 # Retrieve variables from former docker-build.sh
+# shellcheck source=/dev/null
 . ./"$DISTRO"-"$ARCHITECTURE".conf
 
 case "$ARCHITECTURE" in
