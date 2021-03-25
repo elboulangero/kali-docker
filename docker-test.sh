@@ -16,7 +16,7 @@ case "$ARCHITECTURE" in
     armhf) platform="linux/arm/7"; machine="armv7l" ;;
 esac
 
-if [ -n "$CI_JOB_TOKEN" ]; then
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
     docker pull --platform "$platform" "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 

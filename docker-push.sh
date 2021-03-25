@@ -11,7 +11,7 @@ ARCHITECTURE=$2
 . ./"$DISTRO"-"$ARCHITECTURE".conf
 
 # Pull image
-if [ -n "$CI_JOB_TOKEN" ]; then
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
     docker pull "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
@@ -24,7 +24,7 @@ docker manifest create \
     --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 
 # Push to Docher Hub registry
-if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
     docker tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
     docker push "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
 

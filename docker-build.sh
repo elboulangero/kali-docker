@@ -49,7 +49,7 @@ docker build \
     --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
-if [ -n "$CI_JOB_TOKEN" ]; then
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
     # Push the image so that subsequent jobs can fetch it
     docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi

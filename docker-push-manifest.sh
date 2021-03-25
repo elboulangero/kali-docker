@@ -28,11 +28,11 @@ done
 IMAGE=$I
 VERSION=$V
 
-if [ -n "$CI_JOB_TOKEN" ]; then
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
     docker manifest push "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
     docker manifest push "$CI_REGISTRY_IMAGE/$IMAGE":latest
 fi
 
-if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
     docker manifest push "$DOCKER_HUB_REGISTRY_IMAGE/$IMAGE":latest
 fi
