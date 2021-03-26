@@ -80,8 +80,7 @@ test-docker-images:
     stage: test
     image: docker:latest
     services:
-      - name: docker:dind
-        command: ["--experimental"]
+        - docker:dind
     dependencies:
         - build-docker-images
     script: |
