@@ -75,7 +75,6 @@ test-docker-images:
     script: |
         set -e
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             for arch in $ARCHS; do
                 ./docker-test.sh "$distro" "$arch"
