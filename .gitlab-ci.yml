@@ -34,6 +34,11 @@ build-rootfs:
         update-binfmts --enable
         echo "Enabled binary formats:"
         update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        # Monkey patch debootstrap to properly detect docker
+        if [ -z "$(. /usr/share/debootstrap/functions && detect_container && echo $CONTAINER)" ]; then
+            echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
+            sed -E -i 's;(proc/1/mountinfo);\1 || [ -e /.dockerenv ];' /usr/share/debootstrap/functions
+        fi
         # Build the various rootfs
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
