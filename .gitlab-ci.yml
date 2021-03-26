@@ -30,6 +30,10 @@ build-rootfs:
         wget -nv "$KEYRING_PKG_URL"
         dpkg -i kali-archive-keyring_*_all.deb
         rm kali-archive-keyring_*_all.deb
+        # Enable support for additional executable binary formats
+        update-binfmts --enable
+        echo "Enabled binary formats:"
+        update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
         # Build the various rootfs
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
