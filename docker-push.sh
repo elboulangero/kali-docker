@@ -2,6 +2,7 @@
 
 set -e
 set -u
+set -x
 
 DISTRO=$1
 ARCHITECTURE=$2
@@ -10,21 +11,23 @@ ARCHITECTURE=$2
 # shellcheck source=/dev/null
 . ./"$DISTRO"-"$ARCHITECTURE".conf
 
-# Pull image
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Pull image
     docker pull "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-# Update manifests for GitLab
-docker manifest create \
-    "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" \
-    --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
-docker manifest create \
-    "$CI_REGISTRY_IMAGE/$IMAGE":latest \
-    --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Update manifests for GitLab. Images must have been pushed beforehand.
+    docker manifest create \
+        "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" \
+        --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    docker manifest create \
+        "$CI_REGISTRY_IMAGE/$IMAGE":latest \
+        --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+fi
 
-# Push to Docher Hub registry
 if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
+    # Push to Docher Hub registry
     docker tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
     docker push "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
 
@@ -37,9 +40,9 @@ if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
 
     # This operation is currently failing with "The operation is unsupported.".
     #./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE
-fi
 
-# Update manifest for Docker Hub
-docker manifest create \
-    "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest \
-    --amend "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
+    # Update manifest for Docker Hub. Images must have been pushed beforehand.
+    docker manifest create \
+        "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest \
+        --amend "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
+fi
