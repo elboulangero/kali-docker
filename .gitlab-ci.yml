@@ -3,8 +3,6 @@ variables:
     BASE_DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
     EXTRA_DISTROS: 'kali-experimental kali-bleeding-edge'
     ARCHS: 'amd64 arm64 armhf'
-    DOCKER_BUILDKIT: '1'
-    DOCKER_CLI_EXPERIMENTAL: 'enabled'
 
 stages:
     - build
@@ -18,17 +16,37 @@ build-rootfs:
     artifacts:
         paths:
             - "*.tar.xz"
-            - "release.version"
-    rules:
-        - if: '$DOCKER_HUB_USER =~ /.+/ && $DOCKER_HUB_ACCESS_TOKEN =~ /.+/'
-          when: on_success
+            - "*.release.version"
     script: |
         set -e
+        # Install tools
         apt-get -y update
-        apt-get -y install dirmngr gnupg pixz wget ca-certificates curl \
-          gnupg-agent qemu-user-static debootstrap
+        apt-get -y install debootstrap pixz qemu-user-static wget
+        # Install Kali archive keyring
+        KEYRING_PKG_URL=$(wget -nv -O - \
+            http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
+            | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+        KEYRING_PKG_URL="http://http.kali.org/kali/$KEYRING_PKG_URL"
+        wget -nv "$KEYRING_PKG_URL"
+        dpkg -i kali-archive-keyring_*_all.deb
+        rm kali-archive-keyring_*_all.deb
+        # Enable support for additional executable binary formats
+        update-binfmts --enable
+        echo "Enabled binary formats:"
+        update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        # Monkey patch debootstrap to properly detect docker
+        if [ -z "$(. /usr/share/debootstrap/functions && detect_container && echo $CONTAINER)" ]; then
+            echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
+            sed -E -i 's;(proc/1/mountinfo);\1 || [ -e /.dockerenv ];' /usr/share/debootstrap/functions
+        fi
+        # Build the various rootfs
         for distro in $BASE_DISTROS; do
-            ./build-rootfs.sh "$distro"
+            for arch in $ARCHS; do
+                echo "========================================"
+                echo "Building rootfs $distro/$arch"
+                echo "========================================"
+                ./build-rootfs.sh "$distro" "$arch"
+            done
         done
 
 build-docker-images:
@@ -36,59 +54,45 @@ build-docker-images:
     image: docker:latest
     services:
         - docker:dind
-    before_script:
-      - BUILDX_URL=$(docker run --rm python:rc-alpine sh -c "pip install --quiet lastversion && lastversion --assets --filter linux-amd64 buildx")
-      - mkdir -p $HOME/.docker/cli-plugins/
-      - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
-      - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
     dependencies:
         - build-rootfs
     artifacts:
         paths:
             - "*.conf"
-            - "release.version"
     script: |
         set -e
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
-        apk add git bash tar pixz
+        apk add bash git tar
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
-            ./docker-build.sh "$distro"
+            for arch in $ARCHS; do
+                ./docker-build.sh "$distro" "$arch"
+            done
         done
         for distro in $EXTRA_DISTROS; do
-            ./docker-build-extra.sh "$distro"
+            for arch in $ARCHS; do
+                ./docker-build-extra.sh "$distro" "$arch"
+            done
         done
 
 test-docker-images:
     stage: test
     image: docker:latest
     services:
-      - name: docker:dind
-        command: ["--experimental"]
+        - docker:dind
     dependencies:
         - build-docker-images
     script: |
         set -e
+        apk update
+        apk add bash
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        echo $CI_JOB_TOKEN | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-        for architecture in $ARCHS; do
-          case "${architecture}" in
-            amd64) platform="linux/amd64"; plataforma="x86_64" ;;
-            arm64) platform="linux/arm64"; plataforma="aarch64" ;;
-            armhf) platform="linux/arm/7"; plataforma="armv7l" ;;
-          esac
-          for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-              . ./"${architecture}-${distro}".conf || true
-              docker pull --platform $platform $CI_REGISTRY_IMAGE/$IMAGE:$VERSION
-              TEST_ARCH=$(docker run --rm $CI_REGISTRY_IMAGE/$IMAGE:$VERSION uname -m)
-              if [[ "${plataforma}" == "$TEST_ARCH" ]]; then
-                echo "OK Architecture correct"
-              else
-                echo "Error: Architecture incorrect"
-                exit 1
-              fi
-          done
+        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+            for arch in $ARCHS; do
+                ./docker-test.sh "$distro" "$arch"
+            done
         done
 
 push-docker-images:
@@ -101,14 +105,22 @@ push-docker-images:
     script: |
         set -e
         apk update
-        apk add curl jq gawk
-        RELEASE=$(cat ./release.version)
-        # Push images Docker Hub
+        apk add bash curl jq gawk
+        echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+        if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+            echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
+        fi
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            ./docker-push.sh "$distro"
+            for arch in $ARCHS; do
+                ./docker-push.sh "$distro" "$arch"
+            done
         done
-        #
-        # Clean tags.
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-          ./docker-cleanup.sh "$distro"
+            ./docker-push-manifest.sh "$distro" "$ARCHS"
         done
+        # Clean tags
+        #for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+        #    for arch in $ARCHS; do
+        #        ./docker-cleanup.sh "$distro" "$arch"
+        #    done
+        #done

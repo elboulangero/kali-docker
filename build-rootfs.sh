@@ -1,70 +1,78 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
+set -u
 
 distro=$1
-mirror=${2:-http://http.kali.org/kali}
-keyring_file="/usr/share/keyrings/kali-archive-keyring.gpg"
-gpg_key="ED444FF07D8D0BF6"
-keyservers=( "keys.gnupg.net" "ha.pool.sks-keyservers.net" )
+architecture=$2
+mirror=${3:-http://http.kali.org/kali}
 
-if [ ! -e $keyring_file ]; then
-  GNUPGHOME="$(mktemp -d)"
-  export GNUPGHOME
-  for server in "${keyservers[@]}"; do
-    gpg --keyring="$keyring_file" --no-default-keyring --keyserver-options timeout=10 \
-      --keyserver "$server" --receive-keys "$gpg_key" && break 2
-  done
-  rm -rf "${GNUPGHOME}"
+rootfsDir=rootfs-$distro-$architecture
+tarball=$distro-$architecture.tar.xz
+versionFile=$distro-$architecture.release.version
+
+rootfs_chroot() {
+    PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+        chroot "$rootfsDir" "$@"
+}
+
+
+if [ ! -e /usr/share/debootstrap/scripts/"$distro" ]; then
+    echo >&2 "ERROR: debootstrap has no script for $distro"
+    echo >&2 "ERROR: use a newer debootstrap"
+    exit 1
 fi
 
-for architecture in $ARCHS; do
-  work_dir="$architecture/$distro"
-  rm -rf "$architecture" || true
-  mkdir -p "$architecture"
-  qemu-debootstrap --variant=minbase --components=main,contrib,non-free \
-    --arch="$architecture" --include=kali-archive-keyring,kali-defaults \
-    --keyring="$keyring_file" "$distro" "$work_dir" "$mirror"
+if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
+    echo >&2 "ERROR: you need /usr/share/keyrings/kali-archive-keyring.gpg"
+    echo >&2 "ERROR: install kali-archive-keyring"
+    exit 1
+fi
 
-  cat > "$work_dir/usr/sbin/policy-rc.d" <<-'EOF'
+rm -rf "$rootfsDir" "$tarball"
+
+debootstrap --variant=minbase --components=main,contrib,non-free \
+    --arch="$architecture" --include=kali-archive-keyring \
+    "$distro" "$rootfsDir" "$mirror"
+
+rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
+
+rootfs_chroot apt-get clean
+
+# Inspired by /usr/share/docker.io/contrib/mkimage/debootstrap
+cat > "$rootfsDir/usr/sbin/policy-rc.d" <<-'EOF'
 	#!/bin/sh
 	exit 101
 EOF
-  chmod +x "$work_dir/usr/sbin/policy-rc.d"
+chmod +x "$rootfsDir/usr/sbin/policy-rc.d"
 
-  echo 'force-unsafe-io' > "$work_dir"/etc/dpkg/dpkg.cfg.d/docker-apt-speedup
+echo 'force-unsafe-io' > "$rootfsDir"/etc/dpkg/dpkg.cfg.d/docker-apt-speedup
 
-  aptGetClean='"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";'
-  cat > "$work_dir"/etc/apt/apt.conf.d/docker-clean <<-EOF
+aptGetClean='"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";'
+cat > "$rootfsDir"/etc/apt/apt.conf.d/docker-clean <<-EOF
 	DPkg::Post-Invoke { ${aptGetClean} };
+
 	Dir::Cache::pkgcache "";
 	Dir::Cache::srcpkgcache "";
 EOF
 
-  echo 'Acquire::Languages "none";' >"$work_dir"/etc/apt/apt.conf.d/docker-no-languages
+echo 'Acquire::Languages "none";' >"$rootfsDir"/etc/apt/apt.conf.d/docker-no-languages
 
-  cat > "$work_dir"/etc/apt/apt.conf.d/docker-gzip-indexes <<-'EOF'
+cat > "$rootfsDir"/etc/apt/apt.conf.d/docker-gzip-indexes <<-'EOF'
 	Acquire::GzipIndexes "true";
 	Acquire::CompressionTypes::Order:: "gz";
 EOF
 
-  echo 'Apt::AutoRemove::SuggestsImportant "false";' >"$work_dir"/etc/apt/apt.conf.d/docker-autoremove-suggests
+echo 'Apt::AutoRemove::SuggestsImportant "false";' >"$rootfsDir"/etc/apt/apt.conf.d/docker-autoremove-suggests
 
-  rm -rf "$work_dir"/usr/bin/qemu-* || true
-  rm -rf "$work_dir"/var/lib/apt/lists/* || true
-  rm -rf "$work_dir"/var/cache/apt/*.bin || true
-  rm -rf "$work_dir"/var/cache/apt/archives/*.deb || true
-  find "$work_dir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
-  mkdir -p "$work_dir"/var/lib/apt/lists/partial
+rm -rf "$rootfsDir"/var/lib/apt/lists/*
+mkdir -p "$rootfsDir"/var/lib/apt/lists/partial
+find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 
-  echo "Creating ${architecture}.${distro}.tar.xz"
-  tar -I 'pixz -1' -C "$work_dir" -pcf "${architecture}.${distro}".tar.xz .
+echo "Creating $tarball"
+tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
-  if [ -z "$CI_JOB_TOKEN" ]; then
-    chmod 775 "${architecture}.${distro}".tar.xz
-    rm -rf "${architecture}"
-  fi
-
-  if [ "$distro" = "kali-last-snapshot" ]; then
-    awk -F= '$1=="VERSION" { print $2 ;}' "$work_dir"/usr/lib/os-release | tr -d '"' > release.version
-  fi
-
-done
+if [ "$distro" = "kali-last-snapshot" ]; then
+    # shellcheck source=/dev/null
+    (. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
+fi

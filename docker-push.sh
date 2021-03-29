@@ -1,33 +1,48 @@
-#!/bin/sh -e
+#!/bin/bash
+
+set -e
+set -u
+set -x
 
 DISTRO=$1
-DOCKER_HUB_REGISTRY="docker.io"
-DOCKER_HUB_REGISTRY_IMAGE="index.docker.io/$DOCKER_HUB_ORGANIZATION"
+ARCHITECTURE=$2
 
-for architecture in $ARCHS; do
-  # Retrieve variables from former docker-build.sh
-  # shellcheck source=/dev/null
-  . ./"${architecture}"-"${DISTRO}".conf
+# Retrieve variables from former docker-build.sh
+# shellcheck source=/dev/null
+. ./"$DISTRO"-"$ARCHITECTURE".conf
 
-  if [ -n "$CI_JOB_TOKEN" ]; then
-    echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    docker pull "$CI_REGISTRY_IMAGE"/"${IMAGE:=}":"$VERSION"
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Pull image
+    docker pull "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+fi
 
-    echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
-    docker tag "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION" "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
-    docker push "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:"$architecture"
-    docker rmi "$CI_REGISTRY_IMAGE"/${IMAGE}:"$VERSION"
-  else
-    docker tag "$CI_REGISTRY_IMAGE"/$IMAGE:"$VERSION" "$CI_REGISTRY_IMAGE"/$IMAGE:latest
-  fi
-done
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Update manifests for GitLab. Images must have been pushed beforehand.
+    docker manifest create \
+        "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION" \
+        --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    docker manifest create \
+        "$CI_REGISTRY_IMAGE/$IMAGE":latest \
+        --amend "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+fi
 
-if [ -n "$CI_JOB_TOKEN" ]; then
-  IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_HUB_ORGANIZATION" | tr '\n' ' ')
-  # shellcheck disable=SC2086
-  docker manifest create "$DOCKER_HUB_ORGANIZATION"/${IMAGE}:latest $IMAGES
-  docker manifest push -p "$DOCKER_HUB_REGISTRY_IMAGE"/${IMAGE}:latest
-  for img in $IMAGES; do
-    docker rmi "$img"
-  done
+if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
+    # Push to Docher Hub registry
+    docker tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
+    docker push "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
+
+    # XXX: We don't push the versioned image because we are not
+    # able to cleanup old images and "docker pull" will fetch all
+    # versions of a given image...
+    # Don't push
+    #docker tag $CI_REGISTRY_IMAGE/$IMAGE:$TAG $DOCKER_HUB_REGISTRY_IMAGE/$IMAGE:$TAG
+    #docker push $DOCKER_HUB_ORGANIZATION/$IMAGE:$TAG
+
+    # This operation is currently failing with "The operation is unsupported.".
+    #./docker-cleanup.sh $DOCKER_HUB_ORGANIZATION/$IMAGE
+
+    # Update manifest for Docker Hub. Images must have been pushed beforehand.
+    docker manifest create \
+        "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest \
+        --amend "$DOCKER_HUB_ORGANIZATION/$IMAGE:$ARCHITECTURE"
 fi

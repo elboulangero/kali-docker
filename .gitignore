@@ -1,0 +1,4 @@
+/kali-*.conf
+/kali-*.release.version
+/kali-*.tar.xz
+/rootfs-kali-*

@@ -1,55 +1,62 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
+set -u
 
 DISTRO=$1
+ARCHITECTURE=$2
+TARBALL=$DISTRO-$ARCHITECTURE.tar.xz
+VERSIONFILE=$DISTRO-$ARCHITECTURE.release.version
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-BUILD_VERSION=$(date -u +"%Y-%m-%d")
+BUILD_VERSION=$(date -u +"%Y.%m.%d")
 VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
-for architecture in $ARCHS; do
-  TARBALL="${architecture}.${1}.tar.xz"
-  case "${architecture}" in
-    amd64) plataform="linux/amd64" ;;
-    arm64) plataform="linux/arm64" ;;
-    armhf) plataform="linux/arm/7" ;;
-  esac
-  case "$DISTRO" in
+case "$ARCHITECTURE" in
+    amd64) platform="linux/amd64" ;;
+    arm64) platform="linux/arm64" ;;
+    armhf) platform="linux/arm/7" ;;
+esac
+
+case "$DISTRO" in
     kali-last-snapshot)
-      IMAGE=kali
-      VERSION=$(cat ./release.version)
-      RELEASE_DESCRIPTION="$VERSION"
-      ;;
+        IMAGE=kali
+        VERSION=$(cat "$VERSIONFILE")
+        RELEASE_DESCRIPTION="$VERSION"
+        ;;
     *)
-      IMAGE="$DISTRO"
-      VERSION="${BUILD_VERSION}"
-      RELEASE_DESCRIPTION="$DISTRO"
-      ;;
-  esac
+        IMAGE="$DISTRO"
+        VERSION="$BUILD_VERSION"
+        RELEASE_DESCRIPTION="$DISTRO"
+        ;;
+esac
 
-  if [ -n "$CI_JOB_TOKEN" ]; then
-    DOCKER_BUILD="docker buildx build --push --platform=$plataform"
-  else
-    DOCKER_BUILDKIT=1
-    export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build"
-  fi
+TAG=$VERSION-$ARCHITECTURE
 
-  $DOCKER_BUILD --progress=plain \
-    -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-${architecture}" \
+export DOCKER_BUILDKIT=1
+docker build \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
     --build-arg VERSION="$VERSION" \
     --build-arg VCS_URL="$VCS_URL" \
     --build-arg VCS_REF="$VCS_REF" \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
+    --platform "$platform" \
+    --progress plain \
+    --pull \
+    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
-  cat >"${architecture}-$DISTRO".conf <<END
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Push the image so that subsequent jobs can fetch it
+    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+fi
+
+cat >"$DISTRO-$ARCHITECTURE".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
-VERSION="$VERSION-${architecture}"
+TAG="$TAG"
+VERSION="$VERSION"
 END
-
-done

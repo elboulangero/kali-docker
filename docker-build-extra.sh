@@ -1,56 +1,43 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
+set -u
 
 DISTRO=$1
+ARCHITECTURE=$2
 
-CI_REGISTRY_IMAGE="${CI_REGISTRY_IMAGE:-kalilinux}"
-BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-BUILD_VERSION=$(date -u +"%Y-%m-%d")
-VCS_URL=$(git config --get remote.origin.url)
-VCS_REF=$(git rev-parse --short HEAD)
-RELEASE_DESCRIPTION="$DISTRO"
+# Build the same version as for kali-rolling
+# shellcheck source=/dev/null
+VERSION=$(. ./kali-rolling-"$ARCHITECTURE".conf; echo "$VERSION")
+IMAGE=$DISTRO
 
-for architecture in $ARCHS; do
+case "$ARCHITECTURE" in
+    amd64) platform="linux/amd64" ;;
+    arm64) platform="linux/arm64" ;;
+    armhf) platform="linux/arm/7" ;;
+esac
 
-  case "${architecture}" in
-    amd64) plataform="linux/amd64" ;;
-    arm64) plataform="linux/arm64" ;;
-    armhf) plataform="linux/arm/7" ;;
-  esac
+TAG=$VERSION-$ARCHITECTURE
 
-  # Add repository kali experimental/bleeding-edge in TARBALL
-  echo "deb http://http.kali.org/kali $DISTRO main contrib non-free" > "$DISTRO".list
-  pixz -d -k "${architecture}".kali-rolling.tar.xz
-  tar uf "${architecture}".kali-rolling.tar "$DISTRO".list \
-    --transform "s/$DISTRO.list/.\/etc\/apt\/sources.list.d\/$DISTRO.list/"
-  pixz -1 "${architecture}".kali-rolling.tar "${architecture}.${DISTRO}".tar.xz
-  rm -f "${architecture}".kali-rolling.tar || true
-
-  TARBALL="${architecture}.${DISTRO}.tar.xz"
-  VERSION="${BUILD_VERSION}"
-  IMAGE="$DISTRO"
-
-  if [ -n "$CI_JOB_TOKEN" ]; then
-    DOCKER_BUILD="docker buildx build --push --platform=$plataform"
-  else
-    DOCKER_BUILDKIT=1
-    export DOCKER_BUILDKIT
-    DOCKER_BUILD="docker build --platform=$plataform"
-  fi
-
-  $DOCKER_BUILD --progress=plain \
-    -t "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION-${architecture}" \
-    --build-arg TARBALL="$TARBALL" \
-    --build-arg BUILD_DATE="$BUILD_DATE" \
-    --build-arg VERSION="$VERSION" \
-    --build-arg VCS_URL="$VCS_URL" \
-    --build-arg VCS_REF="$VCS_REF" \
-    --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
+export DOCKER_BUILDKIT=1
+docker build \
+    --build-arg CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"\
+    --build-arg TAG="$TAG" \
+    --file extra/"$IMAGE" \
+    --platform "$platform" \
+    --progress plain \
+    --pull \
+    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
-  cat >"${architecture}-$DISTRO".conf <<END
+if [ -n "${CI_JOB_TOKEN:-}" ]; then
+    # Push the image so that subsequent jobs can fetch it
+    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+fi
+
+cat >"$DISTRO-$ARCHITECTURE".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
 IMAGE="$IMAGE"
-VERSION="$VERSION-${architecture}"
+TAG="$TAG"
+VERSION="$VERSION"
 END
-
-done
