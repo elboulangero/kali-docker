@@ -34,5 +34,5 @@ if [ -n "${CI_JOB_TOKEN:-}" ]; then
 fi
 
 if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
-    docker manifest push "$DOCKER_HUB_REGISTRY_IMAGE/$IMAGE":latest
+    docker manifest push "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest
 fi
