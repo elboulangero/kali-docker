@@ -32,8 +32,10 @@ build-rootfs:
         rm kali-archive-keyring_*_all.deb
         # Enable support for additional executable binary formats
         update-binfmts --enable
-        echo "Enabled binary formats:"
-        update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        echo "Kernel details: $(uname -a)"
+        echo "Executable binary formats:"
+        #update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        update-binfmts --display
         # Monkey patch debootstrap to properly detect docker
         if [ -z "$(. /usr/share/debootstrap/functions && detect_container && echo $CONTAINER)" ]; then
             echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
