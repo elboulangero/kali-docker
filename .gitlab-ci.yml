@@ -64,9 +64,8 @@ build-docker-images:
     script: |
         set -e
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
-        apk add bash git tar
+        apk add bash git
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
