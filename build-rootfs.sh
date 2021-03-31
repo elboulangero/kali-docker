@@ -31,9 +31,23 @@ fi
 
 rm -rf "$rootfsDir" "$tarball"
 
-debootstrap --variant=minbase --components=main,contrib,non-free \
-    --arch="$architecture" --include=kali-archive-keyring \
-    "$distro" "$rootfsDir" "$mirror"
+retry=5
+while [ $retry -gt 0 ]; do
+    ret=0
+    debootstrap --variant=minbase --components=main,contrib,non-free \
+        --arch="$architecture" --include=kali-archive-keyring \
+        "$distro" "$rootfsDir" "$mirror" || ret=$?
+    if [ $ret -eq 0   ]; then break; fi
+    if [ $retry -eq 0 ]; then exit $?; fi
+    retry=$((retry - 1))
+    echo "RETRYING DEBOOTSTRAP in a second..."
+    echo "---- Kernel details:"
+    uname -a
+    echo "---- Executable binary formats:"
+    update-binfmts --display
+    echo "---- the end ----"
+    sleep 1
+done
 
 rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
 

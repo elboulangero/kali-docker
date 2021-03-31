@@ -32,8 +32,10 @@ build-rootfs:
         rm kali-archive-keyring_*_all.deb
         # Enable support for additional executable binary formats
         update-binfmts --enable
-        echo "Enabled binary formats:"
-        update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        echo "Kernel details: $(uname -a)"
+        echo "Executable binary formats:"
+        #update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
+        update-binfmts --display
         # Monkey patch debootstrap to properly detect docker
         if [ -z "$(. /usr/share/debootstrap/functions && detect_container && echo $CONTAINER)" ]; then
             echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
@@ -61,10 +63,9 @@ build-docker-images:
             - "*.conf"
     script: |
         set -e
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
         apk update
-        apk add bash git tar
+        apk add bash git
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
@@ -105,7 +106,7 @@ push-docker-images:
     script: |
         set -e
         apk update
-        apk add bash curl jq gawk
+        apk add bash
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
             echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
@@ -119,6 +120,7 @@ push-docker-images:
             ./docker-push-manifest.sh "$distro" "$ARCHS"
         done
         # Clean tags
+        #apk add curl jq gawk
         #for distro in $BASE_DISTROS $EXTRA_DISTROS; do
         #    for arch in $ARCHS; do
         #        ./docker-cleanup.sh "$distro" "$arch"
