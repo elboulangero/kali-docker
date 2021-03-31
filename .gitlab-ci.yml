@@ -63,9 +63,9 @@ build-docker-images:
             - "*.conf"
     script: |
         set -e
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         apk update
         apk add bash git
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
