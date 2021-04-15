@@ -38,7 +38,7 @@ while [ $retry -gt 0 ]; do
         --arch="$architecture" --include=kali-archive-keyring \
         "$distro" "$rootfsDir" "$mirror" || ret=$?
     if [ $ret -eq 0   ]; then break; fi
-    if [ $retry -eq 0 ]; then exit $?; fi
+    if [ $retry -eq 0 ]; then exit $ret; fi
     retry=$((retry - 1))
     echo "RETRYING DEBOOTSTRAP in a second..."
     echo "---- Kernel details:"
