@@ -9,9 +9,9 @@ TARBALL=$DISTRO-$ARCHITECTURE.tar.xz
 VERSIONFILE=$DISTRO-$ARCHITECTURE.release.version
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
+PROJECT_URL=${CI_PROJECT_URL:-"https://gitlab.com/kalilinux/build-scripts/kali-docker"}
 BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 BUILD_VERSION=$(date -u +"%Y.%m.%d")
-VCS_URL=$(git config --get remote.origin.url)
 VCS_REF=$(git rev-parse --short HEAD)
 
 case "$ARCHITECTURE" in
@@ -40,7 +40,7 @@ docker build \
     --build-arg TARBALL="$TARBALL" \
     --build-arg BUILD_DATE="$BUILD_DATE" \
     --build-arg VERSION="$VERSION" \
-    --build-arg VCS_URL="$VCS_URL" \
+    --build-arg PROJECT_URL="$PROJECT_URL" \
     --build-arg VCS_REF="$VCS_REF" \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
     --platform "$platform" \
