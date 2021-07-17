@@ -10,9 +10,9 @@ VERSIONFILE=$DISTRO-$ARCHITECTURE.release.version
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-kalilinux}
 PROJECT_URL=${CI_PROJECT_URL:-"https://gitlab.com/kalilinux/build-scripts/kali-docker"}
-BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+BUILD_DATE=${CI_JOB_STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 BUILD_VERSION=$(date -u +"%Y.%m.%d")
-VCS_REF=$(git rev-parse --short HEAD)
+VCS_REF=${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD)}
 
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64" ;;
