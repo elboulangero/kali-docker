@@ -14,8 +14,8 @@ LABEL org.opencontainers.image.created="$BUILD_DATE" \
       org.opencontainers.image.revision="$VCS_REF" \
       org.opencontainers.image.vendor="Offensive Security" \
       org.opencontainers.image.version="$VERSION" \
-      org.opencontainers.image.title="Kali Linux ($RELEASE_DESCRIPTION release)" \
-      org.opencontainers.image.description="Official Kali Linux docker image for $RELEASE_DESCRIPTION" \
+      org.opencontainers.image.title="Kali Linux ($RELEASE_DESCRIPTION branch)" \
+      org.opencontainers.image.description="Official Kali Linux container image for $RELEASE_DESCRIPTION" \
       org.opencontainers.image.url="https://www.kali.org/" \
       org.opencontainers.image.authors="Kali Developers <devel@kali.org>"
 
