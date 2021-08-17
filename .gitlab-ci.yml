@@ -24,9 +24,9 @@ build-rootfs:
         apt-get -y install debootstrap pixz qemu-user-static wget
         # Install Kali archive keyring
         KEYRING_PKG_URL=$(wget -nv -O - \
-            http://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
+            https://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
             | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
-        KEYRING_PKG_URL="http://http.kali.org/kali/$KEYRING_PKG_URL"
+        KEYRING_PKG_URL="https://http.kali.org/kali/$KEYRING_PKG_URL"
         wget -nv "$KEYRING_PKG_URL"
         dpkg -i kali-archive-keyring_*_all.deb
         rm kali-archive-keyring_*_all.deb
