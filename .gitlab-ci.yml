@@ -46,6 +46,13 @@ build-rootfs:
             echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
             sed -E -i 's;(proc/1/mountinfo);\1 || [ -e /.dockerenv ];' /usr/share/debootstrap/functions
         fi
+        # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
+        # in August 2021, /builds is mounted with the option nodev, and it breaks
+        # debootstrap. Workaround by using another location.
+        # References:
+        # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
+        # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
+        mkdir /work && cp build-rootfs.sh /work && cd /work
         # Build the various rootfs
         for distro in $BASE_DISTROS; do
             for arch in $ARCHS; do
@@ -55,6 +62,8 @@ build-rootfs:
                 ./build-rootfs.sh "$distro" "$arch"
             done
         done
+        # Bring artifacts back in CI_PROJECT_DIR (see above)
+        cp -v *.tar.xz *.release.version $CI_PROJECT_DIR
 
 build-docker-images:
     stage: register
