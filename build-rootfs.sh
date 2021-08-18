@@ -31,7 +31,7 @@ fi
 
 rm -rf "$rootfsDir" "$tarball"
 
-retry=5
+retry=1
 while [ $retry -ge 0 ]; do
     ret=0
     debootstrap --variant=minbase --components=main,contrib,non-free \
