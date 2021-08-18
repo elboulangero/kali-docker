@@ -36,6 +36,11 @@ build-rootfs:
         echo "Executable binary formats:"
         #update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
         update-binfmts --display
+        # Test architectures right away
+        echo "Arch test:"
+        for arch in $ARCHS; do
+            echo -n "* $arch: " && /usr/lib/arch-test/$arch
+        done
         # Monkey patch debootstrap to properly detect docker
         if [ -z "$(. /usr/share/debootstrap/functions && detect_container && echo $CONTAINER)" ]; then
             echo "PATCHING DEBOOTSTRAP TO FIX DOCKER DETECTION cf. #985481"
