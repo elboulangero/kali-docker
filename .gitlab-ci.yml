@@ -32,10 +32,18 @@ build-rootfs:
         rm kali-archive-keyring_*_all.deb
         # Enable support for additional executable binary formats
         update-binfmts --enable
-        echo "Kernel details: $(uname -a)"
-        echo "Executable binary formats:"
-        #update-binfmts --display | grep -v = | sed -e 's/^/  /' -e 's/:$//'
-        update-binfmts --display
+        # Take a look at the surroundings
+        echo "================================"
+        PS4=====\ $\ ; set -x
+        uname -a
+        cat /proc/cmdline
+        sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
+        ls -l /dev
+        cat /proc/mounts
+        zgrep BINFMT_MISC /proc/config.gz
+        sh -c "update-binfmts --display | sed -n 's/:$//p'"
+        set +x
+        echo "================================"
         # Test architectures right away
         echo "Arch test:"
         for arch in $ARCHS; do
