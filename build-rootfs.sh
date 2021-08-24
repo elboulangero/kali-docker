@@ -78,9 +78,13 @@ EOF
 
 echo 'Apt::AutoRemove::SuggestsImportant "false";' >"$rootfsDir"/etc/apt/apt.conf.d/docker-autoremove-suggests
 
+rm -f "$rootfsDir"/var/cache/ldconfig/aux-cache
 rm -rf "$rootfsDir"/var/lib/apt/lists/*
 mkdir -p "$rootfsDir"/var/lib/apt/lists/partial
 find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
+
+# https://github.com/debuerreotype/debuerreotype/pull/32
+rmdir "$rootfsDir/run/mount" 2>/dev/null || :
 
 echo "Creating $tarball"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
