@@ -15,17 +15,19 @@ echo "Distributions: $DISTROS"
 echo "Extra distros: $EXTRA_DISTROS"
 echo "Architectures: $ARCHS"
 
+RUN=$(test $(id -u) -eq 0 || echo sudo)
+
 for distro in $DISTROS; do
     for arch in $ARCHS; do
         echo "========================================"
         echo "Building image $distro/$arch"
         echo "========================================"
-        sudo ./build-rootfs.sh "$distro" "$arch"
-        sudo ./docker-build.sh "$distro" "$arch"
-        sudo ./docker-test.sh  "$distro" "$arch"
-        sudo ./docker-push.sh  "$distro" "$arch"
+        $RUN ./build-rootfs.sh "$distro" "$arch"
+        $RUN ./docker-build.sh "$distro" "$arch"
+        $RUN ./docker-test.sh  "$distro" "$arch"
+        $RUN ./docker-push.sh  "$distro" "$arch"
     done
-    sudo ./docker-push-manifest.sh "$distro" "$arch"
+    $RUN ./docker-push-manifest.sh "$distro" "$arch"
 done
 
 for distro in $EXTRA_DISTROS; do
@@ -33,9 +35,9 @@ for distro in $EXTRA_DISTROS; do
         echo "========================================"
         echo "Building image $distro/$arch"
         echo "========================================"
-        sudo ./docker-build-extra.sh "$distro" "$arch"
-        sudo ./docker-test.sh "$distro" "$arch"
-        sudo ./docker-push.sh "$distro" "$arch"
+        $RUN ./docker-build-extra.sh "$distro" "$arch"
+        $RUN ./docker-test.sh "$distro" "$arch"
+        $RUN ./docker-push.sh "$distro" "$arch"
     done
-    sudo ./docker-push-manifest.sh "$distro" "$arch"
+    $RUN ./docker-push-manifest.sh "$distro" "$arch"
 done
