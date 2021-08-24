@@ -45,7 +45,6 @@ docker build \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
     --platform "$platform" \
     --progress plain \
-    --pull \
     --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 

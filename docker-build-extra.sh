@@ -28,7 +28,6 @@ docker build \
     --file extra/"$IMAGE" \
     --platform "$platform" \
     --progress plain \
-    --pull \
     --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
