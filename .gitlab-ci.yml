@@ -131,7 +131,7 @@ push-docker-images:
         apk add bash
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
-            echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_HUB_REGISTRY"
+            echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
         fi
         for distro in $BASE_DISTROS $EXTRA_DISTROS; do
             for arch in $ARCHS; do
