@@ -27,7 +27,7 @@ for distro in $DISTROS; do
         $RUN ./docker-test.sh  "$distro" "$arch"
         $RUN ./docker-push.sh  "$distro" "$arch"
     done
-    $RUN ./docker-push-manifest.sh "$distro" "$arch"
+    $RUN ./docker-push-manifest.sh "$distro" "$ARCHS"
 done
 
 for distro in $EXTRA_DISTROS; do
@@ -39,5 +39,5 @@ for distro in $EXTRA_DISTROS; do
         $RUN ./docker-test.sh "$distro" "$arch"
         $RUN ./docker-push.sh "$distro" "$arch"
     done
-    $RUN ./docker-push-manifest.sh "$distro" "$arch"
+    $RUN ./docker-push-manifest.sh "$distro" "$ARCHS"
 done
