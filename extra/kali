@@ -2,4 +2,42 @@ ARG CI_REGISTRY_IMAGE
 ARG TAG
 FROM $CI_REGISTRY_IMAGE/kali-last-release:$TAG
 
+RUN echo "\
+┏━(Message from Kali developers)\n\
+┃\n\
+┃ TLDR: kalilinux/kali is now kalilinux/kali-last-release\n\
+┃\n\
+┃ The Docker image that refers to the last Kali Linux official release\n\
+┃ (updated quaterly) used to be named "kalilinux/kali". We renamed it\n\
+┃ to "kalilinux/kali-last-release" for clarity.\n\
+┃\n\
+┃ Please stop using it as it will be REMOVED from the Docker Hub in\n\
+┃ a near future. Update your Dockerfiles and scripts to use the new\n\
+┃ name instead. For example:\n\
+┃\n\
+┃   * in your terminal, use:\n\
+┃\n\
+┃     docker run [...] kalilinux/kali-last-release\n\
+┃\n\
+┃   * in your Dockerfile, use:\n\
+┃\n\
+┃     FROM kalilinux/kali-last-release\n\
+┃\n\
+┃ For more information, please refer to:\n\
+┃ https://www.kali.org/docs/containers/official-kalilinux-docker-images/\n\
+┃\n\
+┗━(Thanks)\n"\
+    > /etc/motd \
+ && echo "cat /etc/motd" >> /etc/bash.bashrc \
+ && echo "#exit 1" >> /etc/bash.bashrc
+
+RUN echo "#!/bin/sh\ncat /etc/motd\nexec apt.orig \"\$@\"" > /usr/bin/apt-wrapper \
+ && echo "#!/bin/sh\ncat /etc/motd\nexec apt-get.orig \"\$@\"" > /usr/bin/apt-get-wrapper \
+ && chmod +x /usr/bin/apt-wrapper \
+ && chmod +x /usr/bin/apt-get-wrapper \
+ && mv /usr/bin/apt /usr/bin/apt.orig \
+ && mv /usr/bin/apt-get /usr/bin/apt-get.orig \
+ && ln -s apt-wrapper /usr/bin/apt \
+ && ln -s apt-get-wrapper /usr/bin/apt-get
+
 CMD ["bash"]
