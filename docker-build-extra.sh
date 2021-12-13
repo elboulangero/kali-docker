@@ -8,14 +8,24 @@ ARCHITECTURE=$2
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
 
-# Build the same version as for kali-rolling
-# shellcheck source=/dev/null
-VERSION=$(. ./kali-rolling-"$ARCHITECTURE".conf; echo "$VERSION")
-
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64" ;;
     arm64) platform="linux/arm64" ;;
     armhf) platform="linux/arm/7" ;;
+esac
+
+case "$IMAGE" in
+    kali)
+        # Based on kali-last-release
+        VERSIONFILE=kali-last-release-"$ARCHITECTURE".release.version
+        VERSION=$(cat "$VERSIONFILE")
+        ;;
+    *)
+        # Based on kali-rolling
+        CONFFILE=kali-rolling-"$ARCHITECTURE".conf
+        # shellcheck source=/dev/null
+        VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
+        ;;
 esac
 
 TAG=$VERSION-$ARCHITECTURE

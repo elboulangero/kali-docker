@@ -1,0 +1,5 @@
+ARG CI_REGISTRY_IMAGE
+ARG TAG
+FROM $CI_REGISTRY_IMAGE/kali-last-release:$TAG
+
+CMD ["bash"]
