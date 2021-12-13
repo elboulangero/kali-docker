@@ -4,12 +4,12 @@ set -e
 set -u
 set -x
 
-DISTRO=$1
+IMAGE=$1
 ARCHITECTURE=$2
 
 # Retrieve variables from former docker-build.sh
 # shellcheck source=/dev/null
-. ./"$DISTRO"-"$ARCHITECTURE".conf
+. ./"$IMAGE-$ARCHITECTURE".conf
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
     # Pull image

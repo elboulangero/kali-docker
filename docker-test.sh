@@ -3,12 +3,12 @@
 set -e
 set -u
 
-DISTRO=$1
+IMAGE=$1
 ARCHITECTURE=$2
 
 # Retrieve variables from former docker-build.sh
 # shellcheck source=/dev/null
-. ./"$DISTRO"-"$ARCHITECTURE".conf
+. ./"$IMAGE-$ARCHITECTURE".conf
 
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64"; machine="x86_64" ;;

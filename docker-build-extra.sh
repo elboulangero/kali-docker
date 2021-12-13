@@ -3,7 +3,7 @@
 set -e
 set -u
 
-DISTRO=$1
+IMAGE=$1
 ARCHITECTURE=$2
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
@@ -11,7 +11,6 @@ CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
 # Build the same version as for kali-rolling
 # shellcheck source=/dev/null
 VERSION=$(. ./kali-rolling-"$ARCHITECTURE".conf; echo "$VERSION")
-IMAGE=$DISTRO
 
 case "$ARCHITECTURE" in
     amd64) platform="linux/amd64" ;;
@@ -36,9 +35,8 @@ if [ -n "${CI_JOB_TOKEN:-}" ]; then
     docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-cat >"$DISTRO-$ARCHITECTURE".conf <<END
+cat >"$IMAGE-$ARCHITECTURE".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
-IMAGE="$IMAGE"
 TAG="$TAG"
 VERSION="$VERSION"
 END

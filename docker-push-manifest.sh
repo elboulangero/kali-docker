@@ -3,29 +3,22 @@
 set -e
 set -u
 
-DISTRO=$1
+IMAGE=$1
 ARCHITECTURES=$2
 
 # Retrieve variables from former docker-build.sh
 # We deal with all architectures at once, and we
 # also expect only ONE image and version, just
 # different architectures.
-I=
 V=
 for arch in $ARCHITECTURES; do
-    . ./"$DISTRO"-"$arch".conf
-    I=${I:-$IMAGE}
+    . ./"$IMAGE-$arch".conf
     V=${V:-$VERSION}
-    if [ "$I" != "$IMAGE" ]; then
-        echo >&2 "ERROR: image mismatch, '$I' != '$IMAGE'"
-        exit 1
-    fi
     if [ "$V" != "$VERSION" ]; then
         echo >&2 "ERROR: version mismatch, '$V' != '$VERSION'"
         exit 1
     fi
 done
-IMAGE=$I
 VERSION=$V
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then

@@ -3,19 +3,28 @@
 set -e
 set -u
 
-distro=$1
+image=$1
 architecture=$2
 mirror=${3:-http://http.kali.org/kali}
 
-rootfsDir=rootfs-$distro-$architecture
-tarball=$distro-$architecture.tar.xz
-versionFile=$distro-$architecture.release.version
+rootfsDir=rootfs-$image-$architecture
+tarball=$image-$architecture.tar.xz
+versionFile=$image-$architecture.release.version
 
 rootfs_chroot() {
     PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
         chroot "$rootfsDir" "$@"
 }
 
+case $image in
+    kali-dev|kali-rolling|kali-last-snapshot)
+        distro=$image
+        ;;
+    *)
+        echo >&2 "ERROR: unsupported image '$image'"
+        exit 1
+        ;;
+esac
 
 if [ ! -e /usr/share/debootstrap/scripts/"$distro" ]; then
     echo >&2 "ERROR: debootstrap has no script for $distro"
@@ -89,7 +98,7 @@ rmdir "$rootfsDir/run/mount" 2>/dev/null || :
 echo "Creating $tarball"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
-if [ "$distro" = "kali-last-snapshot" ]; then
+if [ "$image" = "kali-last-snapshot" ]; then
     # shellcheck source=/dev/null
     (. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
 fi

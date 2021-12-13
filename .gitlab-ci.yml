@@ -1,7 +1,7 @@
 
 variables:
-    BASE_DISTROS: 'kali-rolling kali-dev kali-last-snapshot'
-    EXTRA_DISTROS: 'kali-experimental kali-bleeding-edge'
+    BASE_IMAGES: 'kali-rolling kali-dev kali-last-snapshot'
+    EXTRA_IMAGES: 'kali-experimental kali-bleeding-edge'
     ARCHS: 'amd64 arm64 armhf'
 
 stages:
@@ -57,12 +57,12 @@ build-rootfs:
         # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
         mkdir /work && cp build-rootfs.sh /work && cd /work
         # Build the various rootfs
-        for distro in $BASE_DISTROS; do
+        for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
                 echo "========================================"
-                echo "Building rootfs $distro/$arch"
+                echo "Building rootfs $image/$arch"
                 echo "========================================"
-                ./build-rootfs.sh "$distro" "$arch"
+                ./build-rootfs.sh "$image" "$arch"
             done
         done
         # Bring artifacts back in CI_PROJECT_DIR (see above)
@@ -84,14 +84,14 @@ build-docker-images:
         apk add bash
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-        for distro in $BASE_DISTROS; do
+        for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
-                ./docker-build.sh "$distro" "$arch"
+                ./docker-build.sh "$image" "$arch"
             done
         done
-        for distro in $EXTRA_DISTROS; do
+        for image in $EXTRA_IMAGES; do
             for arch in $ARCHS; do
-                ./docker-build-extra.sh "$distro" "$arch"
+                ./docker-build-extra.sh "$image" "$arch"
             done
         done
 
@@ -107,9 +107,9 @@ test-docker-images:
         apk update
         apk add bash
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+        for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
-                ./docker-test.sh "$distro" "$arch"
+                ./docker-test.sh "$image" "$arch"
             done
         done
 
@@ -128,18 +128,18 @@ push-docker-images:
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
             echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
         fi
-        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+        for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
-                ./docker-push.sh "$distro" "$arch"
+                ./docker-push.sh "$image" "$arch"
             done
         done
-        for distro in $BASE_DISTROS $EXTRA_DISTROS; do
-            ./docker-push-manifest.sh "$distro" "$ARCHS"
+        for image in $BASE_IMAGES $EXTRA_IMAGES; do
+            ./docker-push-manifest.sh "$image" "$ARCHS"
         done
         # Clean tags
         #apk add curl jq gawk
-        #for distro in $BASE_DISTROS $EXTRA_DISTROS; do
+        #for image in $BASE_IMAGES $EXTRA_IMAGES; do
         #    for arch in $ARCHS; do
-        #        ./docker-cleanup.sh "$distro" "$arch"
+        #        ./docker-cleanup.sh "$image" "$arch"
         #    done
         #done

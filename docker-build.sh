@@ -3,10 +3,10 @@
 set -e
 set -u
 
-DISTRO=$1
+IMAGE=$1
 ARCHITECTURE=$2
-TARBALL=$DISTRO-$ARCHITECTURE.tar.xz
-VERSIONFILE=$DISTRO-$ARCHITECTURE.release.version
+TARBALL=$IMAGE-$ARCHITECTURE.tar.xz
+VERSIONFILE=$IMAGE-$ARCHITECTURE.release.version
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
 PROJECT_URL=${CI_PROJECT_URL:-"https://gitlab.com/kalilinux/build-scripts/kali-docker"}
@@ -20,16 +20,14 @@ case "$ARCHITECTURE" in
     armhf) platform="linux/arm/7" ;;
 esac
 
-case "$DISTRO" in
+case "$IMAGE" in
     kali-last-snapshot)
-        IMAGE=kali
         VERSION=$(cat "$VERSIONFILE")
         RELEASE_DESCRIPTION="$VERSION"
         ;;
     *)
-        IMAGE="$DISTRO"
         VERSION="$BUILD_VERSION"
-        RELEASE_DESCRIPTION="$DISTRO"
+        RELEASE_DESCRIPTION="$IMAGE"
         ;;
 esac
 
@@ -53,9 +51,8 @@ if [ -n "${CI_JOB_TOKEN:-}" ]; then
     docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-cat >"$DISTRO-$ARCHITECTURE".conf <<END
+cat >"$IMAGE-$ARCHITECTURE".conf <<END
 CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
-IMAGE="$IMAGE"
 TAG="$TAG"
 VERSION="$VERSION"
 END
