@@ -21,7 +21,7 @@ case "$ARCHITECTURE" in
 esac
 
 case "$IMAGE" in
-    kali-last-snapshot)
+    kali-last-release)
         VERSION=$(cat "$VERSIONFILE")
         RELEASE_DESCRIPTION="$VERSION"
         ;;

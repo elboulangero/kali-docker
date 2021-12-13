@@ -17,8 +17,11 @@ rootfs_chroot() {
 }
 
 case $image in
-    kali-dev|kali-rolling|kali-last-snapshot)
+    kali-dev|kali-rolling)
         distro=$image
+        ;;
+    kali-last-release)
+        distro=kali-last-snapshot
         ;;
     *)
         echo >&2 "ERROR: unsupported image '$image'"
@@ -98,7 +101,7 @@ rmdir "$rootfsDir/run/mount" 2>/dev/null || :
 echo "Creating $tarball"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
-if [ "$image" = "kali-last-snapshot" ]; then
+if [ "$image" = "kali-last-release" ]; then
     # shellcheck source=/dev/null
     (. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
 fi

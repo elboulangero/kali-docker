@@ -6,7 +6,7 @@ set -u
 IMAGES="${1:-kali-rolling}"
 ARCHS="${2:-amd64}"
 
-BASE_IMAGES="kali-rolling kali-dev kali-last-snapshot"
+BASE_IMAGES="kali-rolling kali-dev kali-last-release"
 EXTRA_IMAGES="kali-experimental kali-bleeding-edge"
 
 [ "$IMAGES" == all ] && IMAGES="$BASE_IMAGES $EXTRA_IMAGES"

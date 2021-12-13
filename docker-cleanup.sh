@@ -3,11 +3,7 @@
 set -e
 set -u
 
-if [ "$1" = "kali-last-snapshot" ]; then
-    REPO=kali
-else
-    REPO=$1
-fi
+REPO=$1
 ARCH=$2
 
 REPOSITORY="$DOCKER_HUB_ORGANIZATION/${REPO}"
