@@ -6,6 +6,17 @@ set -u
 IMAGES="${1:-kali-rolling}"
 ARCHS="${2:-amd64}"
 
+USAGE="Usage: $(basename $0) [IMAGES] [ARCHITECTURES]
+
+IMAGES and ARCHITECTURES must be space-separated and surrounded by quotes.
+Use 'all' as a special keyword to build all images. Same for architectures.
+"
+
+if [ $# -ge 3 ]; then
+    echo "$USAGE" >&2
+    exit 1
+fi
+
 BASE_IMAGES="kali-rolling kali-dev kali-last-release"
 EXTRA_IMAGES="kali-experimental kali-bleeding-edge kali"
 
