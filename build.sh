@@ -59,5 +59,19 @@ for image in $IMAGES; do
         $RUN ./docker-test.sh  "$image" "$arch"
         $RUN ./docker-push.sh  "$image" "$arch"
     done
+done
+
+# On the Docker Hub, the image that was pushed last appears first.
+# However we'd be much happier if the images were sorted by order
+# of importance instead. So let's push it by reverse order of
+# importance then.
+ORDER="kali-rolling kali-last-release kali-bleeding-edge kali-experimental kali-dev"
+for image in $(printf "%s\n" $ORDER | tac); do
+    if echo "$IMAGES" | grep -qw $image; then
+        IMAGES="${IMAGES//$image/} $image"
+    fi
+done
+
+for image in $IMAGES; do
     $RUN ./docker-push-manifest.sh "$image" "$ARCHS"
 done
