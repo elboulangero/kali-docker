@@ -6,10 +6,9 @@ set -u
 IMAGE=$1
 ARCHITECTURES=$2
 
-# Retrieve variables from former docker-build.sh
-# We deal with all architectures at once, and we
-# also expect only ONE image and version, just
-# different architectures.
+# Retrieve variables from former docker-build.sh.
+# We deal with all architectures at once, and of course
+# we expect the version to be the same each time.
 V=
 for arch in $ARCHITECTURES; do
     . ./"$IMAGE-$arch".conf
