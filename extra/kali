@@ -29,7 +29,7 @@ RUN echo "\
 ┗━(Thanks)\n"\
     > /etc/motd \
  && echo "cat /etc/motd" >> /etc/bash.bashrc \
- && echo "#exit 1" >> /etc/bash.bashrc
+ && echo "exit 1" >> /etc/bash.bashrc
 
 RUN echo "#!/bin/sh\ncat /etc/motd\nexec apt.orig \"\$@\"" > /usr/bin/apt-wrapper \
  && echo "#!/bin/sh\ncat /etc/motd\nexec apt-get.orig \"\$@\"" > /usr/bin/apt-get-wrapper \
