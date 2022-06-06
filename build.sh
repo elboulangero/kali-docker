@@ -18,7 +18,7 @@ if [ $# -ge 3 ]; then
 fi
 
 BASE_IMAGES="kali-rolling kali-dev kali-last-release"
-EXTRA_IMAGES="kali-experimental kali-bleeding-edge kali"
+EXTRA_IMAGES="kali-experimental kali-bleeding-edge"
 
 [ "$IMAGES" == all ] && IMAGES="$BASE_IMAGES $EXTRA_IMAGES"
 [ "$ARCHS" == all ] && ARCHS="amd64 arm64 armhf"
@@ -36,11 +36,9 @@ echo "Architectures: $ARCHS"
 RUN=$(test $(id -u) -eq 0 || echo sudo)
 
 for image in $IMAGES; do
-    # we can't just use 'grep -w' due to an image being named 'kali'
-    # cf. https://stackoverflow.com/a/46073005/776208 for the regex magic
-    if echo "$BASE_IMAGES" | grep -q -P '(?<![\w-])'"$image"'(?![\w-])'; then
+    if echo "$BASE_IMAGES" | grep -qw $image; then
         base_image=1
-    elif echo "$EXTRA_IMAGES" | grep -q -P '(?<![\w-])'"$image"'(?![\w-])'; then
+    elif echo "$EXTRA_IMAGES" | grep -qw $image; then
         base_image=0
     else
         echo "Invalid image name '$image'" >&2

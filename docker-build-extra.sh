@@ -14,19 +14,10 @@ case "$ARCHITECTURE" in
     armhf) platform="linux/arm/7" ;;
 esac
 
-case "$IMAGE" in
-    kali)
-        # Based on kali-last-release
-        VERSIONFILE=kali-last-release-"$ARCHITECTURE".release.version
-        VERSION=$(cat "$VERSIONFILE")
-        ;;
-    *)
-        # Based on kali-rolling
-        CONFFILE=kali-rolling-"$ARCHITECTURE".conf
-        # shellcheck source=/dev/null
-        VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
-        ;;
-esac
+# Extra images are based on kali-rolling
+CONFFILE=kali-rolling-"$ARCHITECTURE".conf
+# shellcheck source=/dev/null
+VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
 
 TAG=$VERSION-$ARCHITECTURE
 

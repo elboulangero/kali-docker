@@ -1,7 +1,7 @@
 
 variables:
     BASE_IMAGES: 'kali-rolling kali-dev kali-last-release'
-    EXTRA_IMAGES: 'kali-experimental kali-bleeding-edge kali'
+    EXTRA_IMAGES: 'kali-experimental kali-bleeding-edge'
     ARCHS: 'amd64 arm64 armhf'
 
 stages:
