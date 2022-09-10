@@ -17,6 +17,13 @@ build-rootfs:
         paths:
             - "*.tar.xz"
             - "*.release.version"
+    before_script:
+        # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
+        # in August 2021, /builds is mounted with the option nodev, and it breaks
+        # debootstrap. References:
+        # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
+        # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
+        - findmnt -no options -T . | grep -qw nodev && mount -vo remount,dev $(stat -c %m .) || :
     script: |
         set -e
         # Install tools
@@ -49,13 +56,6 @@ build-rootfs:
         for arch in $ARCHS; do
             echo -n "* $arch: " && /usr/lib/arch-test/$arch
         done
-        # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
-        # in August 2021, /builds is mounted with the option nodev, and it breaks
-        # debootstrap. Workaround by using another location.
-        # References:
-        # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
-        # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
-        mkdir /work && cp build-rootfs.sh /work && cd /work
         # Build the various rootfs
         for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
@@ -65,8 +65,6 @@ build-rootfs:
                 ./build-rootfs.sh "$image" "$arch"
             done
         done
-        # Bring artifacts back in CI_PROJECT_DIR (see above)
-        cp -v *.tar.xz *.release.version $CI_PROJECT_DIR
 
 build-docker-images:
     stage: register
