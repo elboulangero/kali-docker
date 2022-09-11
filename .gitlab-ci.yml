@@ -27,7 +27,8 @@ build-rootfs:
           v sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
           v ls -l /dev
           v cat /proc/mounts
-          v zgrep BINFMT_MISC /proc/config.gz
+          [ -e /proc/config.gz ] && v zgrep BINFMT_MISC /proc/config.gz
+          [ -e /boot/config-$(uname -r) ] && v grep BINFMT_MISC /boot/config-$(uname -r)
           echo "================================"
         # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
         # in August 2021, /builds is mounted with the option nodev, and it breaks
