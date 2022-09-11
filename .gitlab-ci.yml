@@ -18,6 +18,17 @@ build-rootfs:
             - "*.tar.xz"
             - "*.release.version"
     before_script:
+        # Take a look at the surroundings
+        - |
+          v() { echo "==== $ $@"; "$@"; }
+          echo "================================"
+          v uname -a
+          v cat /proc/cmdline
+          v sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
+          v ls -l /dev
+          v cat /proc/mounts
+          v zgrep BINFMT_MISC /proc/config.gz
+          echo "================================"
         # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
         # in August 2021, /builds is mounted with the option nodev, and it breaks
         # debootstrap. References:
@@ -39,18 +50,7 @@ build-rootfs:
         rm kali-archive-keyring_*_all.deb
         # Enable support for additional executable binary formats
         update-binfmts --enable
-        # Take a look at the surroundings
-        echo "================================"
-        PS4=====\ $\ ; set -x
-        uname -a
-        cat /proc/cmdline
-        sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
-        ls -l /dev
-        cat /proc/mounts
-        zgrep BINFMT_MISC /proc/config.gz
-        sh -c "update-binfmts --display | sed -n 's/:$//p'"
-        set +x
-        echo "================================"
+        update-binfmts --display | sed -n 's/:$//p'
         # Test architectures right away
         echo "Arch test:"
         for arch in $ARCHS; do
