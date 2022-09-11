@@ -12,7 +12,10 @@ IMAGES and ARCHITECTURES must be space-separated and surrounded by quotes.
 Use 'all' as a special keyword to build all images. Same for architectures.
 "
 
-if [ $# -ge 3 ]; then
+if [ $# -eq 1 ] && [ $1 = "-h" -o $1 = "--help" ]; then
+    echo "$USAGE"
+    exit 0
+elif [ $# -gt 2 ]; then
     echo "$USAGE" >&2
     exit 1
 fi
