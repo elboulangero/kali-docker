@@ -6,11 +6,19 @@ set -u
 IMAGES="${1:-kali-rolling}"
 ARCHS="${2:-amd64}"
 
+BASE_IMAGES="kali-rolling kali-dev kali-last-release"
+EXTRA_IMAGES="kali-experimental kali-bleeding-edge"
+ALL_IMAGES="$BASE_IMAGES $EXTRA_IMAGES"
+ALL_ARCHS="amd64 arm64 armhf"
+
 USAGE="Usage: $(basename $0) [IMAGES] [ARCHITECTURES]
 
 IMAGES and ARCHITECTURES must be space-separated and surrounded by quotes.
-Use 'all' as a special keyword to build all images. Same for architectures.
-"
+The special value 'all' can be used to select them all.
+
+List of supported values:
+* IMAGES: $ALL_IMAGES
+* ARCHITECTURES: $ALL_ARCHS"
 
 if [ $# -eq 1 ] && [ $1 = "-h" -o $1 = "--help" ]; then
     echo "$USAGE"
@@ -20,11 +28,8 @@ elif [ $# -gt 2 ]; then
     exit 1
 fi
 
-BASE_IMAGES="kali-rolling kali-dev kali-last-release"
-EXTRA_IMAGES="kali-experimental kali-bleeding-edge"
-
-[ "$IMAGES" == all ] && IMAGES="$BASE_IMAGES $EXTRA_IMAGES"
-[ "$ARCHS" == all ] && ARCHS="amd64 arm64 armhf"
+[ "$IMAGES" = all ] && IMAGES="$ALL_IMAGES"
+[ "$ARCHS"  = all ] && ARCHS="$ALL_ARCHS"
 
 # ensure base images get built first, as extra images depend on it
 for image in $(printf "%s\n" $BASE_IMAGES | tac); do
