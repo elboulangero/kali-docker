@@ -14,7 +14,7 @@ for arch in $ARCHITECTURES; do
     . ./"$IMAGE-$arch".conf
     V=${V:-$VERSION}
     if [ "$V" != "$VERSION" ]; then
-        echo >&2 "ERROR: version mismatch, '$V' != '$VERSION'"
+        echo "ERROR: version mismatch, '$V' != '$VERSION'" >&2
         exit 1
     fi
 done

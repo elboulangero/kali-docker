@@ -24,20 +24,20 @@ case $image in
         distro=kali-last-snapshot
         ;;
     *)
-        echo >&2 "ERROR: unsupported image '$image'"
+        echo "ERROR: unsupported image '$image'" >&2
         exit 1
         ;;
 esac
 
 if [ ! -e /usr/share/debootstrap/scripts/"$distro" ]; then
-    echo >&2 "ERROR: debootstrap has no script for $distro"
-    echo >&2 "ERROR: use a newer debootstrap"
+    echo "ERROR: debootstrap has no script for $distro" >&2
+    echo "ERROR: use a newer debootstrap" >&2
     exit 1
 fi
 
 if [ ! -e /usr/share/keyrings/kali-archive-keyring.gpg ]; then
-    echo >&2 "ERROR: you need /usr/share/keyrings/kali-archive-keyring.gpg"
-    echo >&2 "ERROR: install kali-archive-keyring"
+    echo "ERROR: you need /usr/share/keyrings/kali-archive-keyring.gpg" >&2
+    echo "ERROR: install kali-archive-keyring" >&2
     exit 1
 fi
 
