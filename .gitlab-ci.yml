@@ -38,7 +38,7 @@ build-rootfs:
         # debootstrap. References:
         # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
         # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
-        - findmnt -no options -T . | grep -qw nodev && mount -vo remount,dev $(stat -c %m .) || :
+        - findmnt -no options -T . | grep -qw nodev && mount -vo remount,dev $(stat -c %m .) || true
     script: |
         set -e
         # Install tools
