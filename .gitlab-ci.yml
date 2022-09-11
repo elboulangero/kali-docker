@@ -21,8 +21,8 @@ build-rootfs:
             - "*.tar.xz"
             - "*.release.version"
     before_script:
-        # Take a look at the surroundings
         - |
+          # Take a look at the surroundings
           v() { echo "==== $ $@"; "$@"; }
           echo "================================"
           v uname -a
@@ -33,42 +33,48 @@ build-rootfs:
           [ -e /proc/config.gz ] && v zgrep BINFMT_MISC /proc/config.gz
           [ -e /boot/config-$(uname -r) ] && v grep BINFMT_MISC /boot/config-$(uname -r)
           echo "================================"
-        # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
-        # in August 2021, /builds is mounted with the option nodev, and it breaks
-        # debootstrap. References:
-        # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
-        # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
-        - findmnt -no options -T . | grep -qw nodev && mount -vo remount,dev $(stat -c %m .) || true
-    script: |
-        set -e
-        # Install tools
-        apt-get -y update
-        apt-get -y install arch-test binfmt-support debootstrap pixz qemu-user-static wget
-        # Install Kali archive keyring
-        KEYRING_PKG_URL=$(wget -nv -O - \
-            https://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
-            | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
-        KEYRING_PKG_URL="https://http.kali.org/kali/$KEYRING_PKG_URL"
-        wget -nv "$KEYRING_PKG_URL"
-        dpkg -i kali-archive-keyring_*_all.deb
-        rm kali-archive-keyring_*_all.deb
-        # Enable support for additional executable binary formats
-        update-binfmts --enable
-        update-binfmts --display | sed -n 's/:$//p'
-        # Test architectures right away
-        echo "Arch test:"
-        for arch in $ARCHS; do
-            echo -n "* $arch: " && /usr/lib/arch-test/$arch
-        done
-        # Build the various rootfs
-        for image in $BASE_IMAGES; do
-            for arch in $ARCHS; do
-                echo "========================================"
-                echo "Building rootfs $image/$arch"
-                echo "========================================"
-                ./build-rootfs.sh "$image" "$arch"
-            done
-        done
+        - |
+          # Remount /builds with the dev option if needed.
+          # Since GitLab migrated to Google Container-Optimized OS & Docker 19.03.15
+          # in August 2021, /builds is mounted with the option nodev, and it breaks
+          # debootstrap. References:
+          # * https://gitlab.com/kalilinux/build-scripts/kali-docker/-/issues/40
+          # * https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184
+          findmnt -no options -T . | grep -qw nodev && mount -vo remount,dev $(stat -c %m .) || true
+    script:
+        - |
+          # Install packages
+          apt-get update
+          apt-get install -y arch-test binfmt-support debootstrap pixz qemu-user-static wget
+        - |
+          # Install Kali archive keyring
+          KEYRING_PKG_URL=$(wget -nv -O - \
+              https://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
+              | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+          KEYRING_PKG_URL="https://http.kali.org/kali/$KEYRING_PKG_URL"
+          wget -nv "$KEYRING_PKG_URL"
+          dpkg -i kali-archive-keyring_*_all.deb
+          rm kali-archive-keyring_*_all.deb
+        - |
+          # Enable support for additional executable binary formats
+          update-binfmts --enable
+          update-binfmts --display | sed -n 's/:$//p'
+        - |
+          # Test architectures right away
+          echo "Arch test:"
+          for arch in $ARCHS; do
+              echo -n "* $arch: " && /usr/lib/arch-test/$arch
+          done
+        - |
+          # Build all the rootfs
+          for image in $BASE_IMAGES; do
+              for arch in $ARCHS; do
+                  echo "========================================"
+                  echo "Building rootfs $image/$arch"
+                  echo "========================================"
+                  ./build-rootfs.sh "$image" "$arch"
+              done
+          done
 
 build-docker-images:
     stage: register
