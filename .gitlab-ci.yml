@@ -2,7 +2,10 @@
 variables:
     BASE_IMAGES: 'kali-rolling kali-dev kali-last-release'
     EXTRA_IMAGES: 'kali-experimental kali-bleeding-edge'
-    ARCHS: 'amd64 arm64 armhf'
+    # At the moment we can only build Docker images for the host architecture,
+    # cf. https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5401.
+    #ARCHS: 'amd64 arm64 armhf'
+    ARCHS: 'amd64'
 
 stages:
     - build
