@@ -43,22 +43,15 @@ fi
 
 rm -rf "$rootfsDir" "$tarball"
 
-retry=0
-while [ $retry -ge 0 ]; do
-    ret=0
-    debootstrap --variant=minbase --components=main,contrib,non-free \
-        --arch="$architecture" --include=kali-archive-keyring \
-        "$distro" "$rootfsDir" "$mirror" || ret=$?
-    if [ $ret -eq 0 ]; then break; fi
-    echo "FAILURE! Let's look at the tail of debootstrap's log:"
-    tail "$rootfsDir"/debootstrap/debootstrap.log || :
-    echo "----------------"
-    if [ $retry -eq 0 ]; then exit $ret; fi
-    retry=$((retry - 1))
-    sleep 1
-    echo "RETRYING debootstrap now!"
-    rm -fr "$rootfsDir"
-done
+ret=0
+debootstrap --variant=minbase --components=main,contrib,non-free \
+    --arch="$architecture" --include=kali-archive-keyring \
+    "$distro" "$rootfsDir" "$mirror" || ret=$?
+if [ $ret != 0 ]; then
+    [ -e "$rootfsDir"/debootstrap/debootstrap.log ] && \
+        tail -v "$rootfsDir"/debootstrap/debootstrap.log
+    exit $ret
+fi
 
 rootfs_chroot apt-get -y --no-install-recommends install kali-defaults
 
