@@ -28,7 +28,7 @@ build-rootfs:
           v uname -a
           v cat /proc/cmdline
           v sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
-          v ls -l /dev
+          v ls -l --time-style=+ /dev
           v cat /proc/mounts
           [ -e /proc/config.gz ] && v zgrep BINFMT_MISC /proc/config.gz
           [ -e /boot/config-$(uname -r) ] && v grep BINFMT_MISC /boot/config-$(uname -r)
