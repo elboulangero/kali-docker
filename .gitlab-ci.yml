@@ -78,9 +78,11 @@ build-rootfs:
 
 build-docker-images:
     stage: register
-    image: docker:latest
+    image: debian:testing
     services:
         - docker:dind
+    variables:
+        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-rootfs
     artifacts:
@@ -88,9 +90,9 @@ build-docker-images:
             - "*.conf"
     script: |
         set -e
-        apk update
-        apk add bash
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        apt-get update
+        apt-get install -y binfmt-support ca-certificates docker.io qemu-user-static
+        update-binfmts --enable
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
@@ -105,16 +107,18 @@ build-docker-images:
 
 test-docker-images:
     stage: test
-    image: docker:latest
+    image: debian:testing
     services:
         - docker:dind
+    variables:
+        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-docker-images
     script: |
         set -e
-        apk update
-        apk add bash
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        apt-get update
+        apt-get install -y binfmt-support ca-certificates docker.io qemu-user-static
+        update-binfmts --enable
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
                 ./docker-test.sh "$image" "$arch"
@@ -123,15 +127,17 @@ test-docker-images:
 
 push-docker-images:
     stage: push
-    image: docker:latest
+    image: debian:testing
     services:
         - docker:dind
+    variables:
+        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-docker-images
     script: |
         set -e
-        apk update
-        apk add bash
+        apt-get update
+        apt-get install -y ca-certificates docker.io
         echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
             echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
@@ -145,7 +151,7 @@ push-docker-images:
             ./docker-push-manifest.sh "$image" "$ARCHS"
         done
         # Clean tags
-        #apk add curl jq gawk
+        #apt-get install -y curl jq
         #for image in $BASE_IMAGES $EXTRA_IMAGES; do
         #    for arch in $ARCHS; do
         #        ./docker-cleanup.sh "$image" "$arch"
