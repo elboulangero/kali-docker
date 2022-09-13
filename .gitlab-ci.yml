@@ -15,13 +15,13 @@ variables:
     ARCHS: "amd64 arm64 armhf"
 
 stages:
+    - build-rootfs
     - build
-    - register
     - test
     - publish
 
 build-rootfs:
-    stage: build
+    stage: build-rootfs
     image: debian:testing
     artifacts:
         paths:
@@ -84,7 +84,7 @@ build-rootfs:
           done
 
 build-docker-images:
-    stage: register
+    stage: build
     image: debian:testing
     dependencies:
         - build-rootfs
