@@ -70,7 +70,7 @@ if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
     ARCH_TAG=$(for arch in $ARCHITECTURES; do \
         . ./"$IMAGE-$arch".conf && echo "$arch" "$TAG"; done)
 
-    # Tag each image for Docker Hub
+    # Tag each image for Docker Hub.
     while read -r arch tag; do
         podman tag "$REGISTRY_IMAGE/$IMAGE:$tag" \
             "$DOCKER_HUB_ORGANIZATION/$IMAGE:$arch"
@@ -80,8 +80,12 @@ if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
     IMG="$DOCKER_HUB_ORGANIZATION/$IMAGE"
 
     # Create and push the 'latest' manifest
+    # NB: the 'manifest add' command below fails if we don't push
+    # images beforehand. It's not very clear why, the error message
+    # doesn't say, the doc doesn't say either.
     podman manifest create "$IMG":latest
     for arch in $ARCHITECTURES; do
+        podman push "$IMG:$arch"
         podman manifest add "$IMG":latest "$IMG:$arch"
     done
     podman manifest push "$IMG":latest docker://"$IMG":latest
