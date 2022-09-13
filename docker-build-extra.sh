@@ -6,13 +6,10 @@ set -u
 IMAGE=$1
 ARCHITECTURE=$2
 
-CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
-
-# Extra images are based on kali-rolling
-CONFFILE=kali-rolling-"$ARCHITECTURE".conf
-VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
-
-TAG=$VERSION-$ARCHITECTURE
+# Retrieve variables from former docker-build.sh
+# NB: extra images are based on kali-rolling
+BASE=kali-rolling
+. ./"$BASE-$ARCHITECTURE".conf
 
 podman build --squash \
     --arch "$ARCHITECTURE" \
@@ -27,8 +24,4 @@ if [ -n "${CI_JOB_TOKEN:-}" ]; then
     podman push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-cat >"$IMAGE-$ARCHITECTURE".conf <<END
-CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
-TAG="$TAG"
-VERSION="$VERSION"
-END
+cp "$BASE-$ARCHITECTURE".conf "$IMAGE-$ARCHITECTURE".conf
