@@ -41,7 +41,7 @@ done
 echo "Images ..... : $IMAGES"
 echo "Architectures: $ARCHS"
 
-RUN=$(test $(id -u) -eq 0 || echo sudo)
+SUDO=$(test $(id -u) -eq 0 || echo sudo)
 
 for image in $IMAGES; do
     if echo "$BASE_IMAGES" | grep -qw $image; then
@@ -57,13 +57,13 @@ for image in $IMAGES; do
         echo "Building image $image/$arch"
         echo "========================================"
         if [ $base_image -eq 1 ]; then
-            $RUN ./build-rootfs.sh "$image" "$arch"
-            $RUN ./docker-build.sh "$image" "$arch"
+            $SUDO ./build-rootfs.sh "$image" "$arch"
+            ./docker-build.sh "$image" "$arch"
         else
-            $RUN ./docker-build-extra.sh "$image" "$arch"
+            ./docker-build-extra.sh "$image" "$arch"
         fi
-        $RUN ./docker-test.sh  "$image" "$arch"
-        $RUN ./docker-push.sh  "$image" "$arch"
+        ./docker-test.sh  "$image" "$arch"
+        ./docker-push.sh  "$image" "$arch"
     done
 done
 
@@ -79,5 +79,5 @@ for image in $(printf "%s\n" $ORDER | tac); do
 done
 
 for image in $IMAGES; do
-    $RUN ./docker-push-manifest.sh "$image" "$ARCHS"
+    ./docker-push-manifest.sh "$image" "$ARCHS"
 done

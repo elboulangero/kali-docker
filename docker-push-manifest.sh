@@ -21,10 +21,10 @@ done
 VERSION=$V
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
-    docker manifest push --purge "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
-    docker manifest push --purge "$CI_REGISTRY_IMAGE/$IMAGE":latest
+    podman manifest push --purge "$CI_REGISTRY_IMAGE/$IMAGE:$VERSION"
+    podman manifest push --purge "$CI_REGISTRY_IMAGE/$IMAGE":latest
 fi
 
 if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
-    docker manifest push --purge "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest
+    podman manifest push --purge "$DOCKER_HUB_ORGANIZATION/$IMAGE":latest
 fi

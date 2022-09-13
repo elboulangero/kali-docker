@@ -8,12 +8,6 @@ ARCHITECTURE=$2
 
 CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
 
-case "$ARCHITECTURE" in
-    amd64) platform="linux/amd64" ;;
-    arm64) platform="linux/arm64" ;;
-    armhf) platform="linux/arm/7" ;;
-esac
-
 # Extra images are based on kali-rolling
 CONFFILE=kali-rolling-"$ARCHITECTURE".conf
 # shellcheck source=/dev/null
@@ -21,19 +15,17 @@ VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
 
 TAG=$VERSION-$ARCHITECTURE
 
-export DOCKER_BUILDKIT=1
-docker build \
+podman build --squash \
+    --arch "$ARCHITECTURE" \
     --build-arg CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"\
     --build-arg TAG="$TAG" \
     --file extra/"$IMAGE" \
-    --platform "$platform" \
-    --progress plain \
     --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
     # Push the image so that subsequent jobs can fetch it
-    docker push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    podman push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
 cat >"$IMAGE-$ARCHITECTURE".conf <<END

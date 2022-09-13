@@ -79,10 +79,6 @@ build-rootfs:
 build-docker-images:
     stage: register
     image: debian:testing
-    services:
-        - docker:dind
-    variables:
-        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-rootfs
     artifacts:
@@ -91,9 +87,9 @@ build-docker-images:
     script: |
         set -e
         apt-get update
-        apt-get install -y binfmt-support ca-certificates docker.io qemu-user-static
+        apt-get install -y binfmt-support ca-certificates podman qemu-user-static
         update-binfmts --enable
-        echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+        echo "$CI_JOB_TOKEN" | podman login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
                 ./docker-build.sh "$image" "$arch"
@@ -108,17 +104,16 @@ build-docker-images:
 test-docker-images:
     stage: test
     image: debian:testing
-    services:
-        - docker:dind
-    variables:
-        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-docker-images
     script: |
         set -e
         apt-get update
-        apt-get install -y binfmt-support ca-certificates docker.io qemu-user-static
+        apt-get install -y binfmt-support ca-certificates podman qemu-user-static
         update-binfmts --enable
+        # Switch to iptables legacy, as long as GitLab CI doesn't support nftables.
+        # Cf. https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184#note_637383773
+        update-alternatives --set iptables /usr/sbin/iptables-legacy
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
                 ./docker-test.sh "$image" "$arch"
@@ -128,19 +123,15 @@ test-docker-images:
 push-docker-images:
     stage: push
     image: debian:testing
-    services:
-        - docker:dind
-    variables:
-        DOCKER_HOST: 'tcp://docker:2375'
     dependencies:
         - build-docker-images
     script: |
         set -e
         apt-get update
-        apt-get install -y ca-certificates docker.io
-        echo "$CI_JOB_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+        apt-get install -y ca-certificates podman
+        echo "$CI_JOB_TOKEN" | podman login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
-            echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+            echo "$DOCKER_HUB_ACCESS_TOKEN" | podman login -u "$DOCKER_HUB_USER" --password-stdin docker.io
         fi
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
