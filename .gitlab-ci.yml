@@ -8,6 +8,8 @@ variables:
     # rolling. So for now, let's disable kali-last-release. We can enable it
     # again after the next release.
     #BASE_IMAGES: "kali-rolling kali-last-release kali-dev"
+    # NB: Images will appear in this order on the Docker Hub, so keep everything
+    # sorted per order of importance here, both architectures and images.
     BASE_IMAGES: "kali-rolling kali-dev"
     EXTRA_IMAGES: "kali-bleeding-edge kali-experimental"
     ARCHS: "amd64 arm64 armhf"
@@ -147,7 +149,10 @@ publish-docker-images:
         if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
             echo "$DOCKER_HUB_ACCESS_TOKEN" | podman login -u "$DOCKER_HUB_USER" --password-stdin docker.io
         fi
-        for image in $BASE_IMAGES $EXTRA_IMAGES; do
+        # Push images in reverse order, so that they appear in order in Docker Hub.
+        ARCHS=$(printf "%s\n" $ARCHS | tac | paste -s -d " ")
+        IMAGES=$(printf "%s\n" $BASE_IMAGES $EXTRA_IMAGES | tac | paste -s -d " ")
+        for image in $IMAGES; do
             echo "============================================================"
             echo "Publishing docker image $image ($ARCHS)"
             echo "============================================================"
