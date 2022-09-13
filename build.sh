@@ -63,7 +63,6 @@ for image in $IMAGES; do
             ./docker-build-extra.sh "$image" "$arch"
         fi
         ./docker-test.sh  "$image" "$arch"
-        ./docker-push.sh  "$image" "$arch"
     done
 done
 
@@ -79,5 +78,5 @@ for image in $(printf "%s\n" $ORDER | tac); do
 done
 
 for image in $IMAGES; do
-    ./docker-push-manifest.sh "$image" "$ARCHS"
+    ./docker-publish.sh "$image" "$ARCHS"
 done

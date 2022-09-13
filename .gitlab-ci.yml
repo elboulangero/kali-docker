@@ -11,7 +11,7 @@ stages:
     - build
     - register
     - test
-    - push
+    - publish
 
 build-rootfs:
     stage: build
@@ -120,8 +120,8 @@ test-docker-images:
             done
         done
 
-push-docker-images:
-    stage: push
+publish-docker-images:
+    stage: publish
     image: debian:testing
     dependencies:
         - build-docker-images
@@ -134,12 +134,7 @@ push-docker-images:
             echo "$DOCKER_HUB_ACCESS_TOKEN" | podman login -u "$DOCKER_HUB_USER" --password-stdin docker.io
         fi
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
-            for arch in $ARCHS; do
-                ./docker-push.sh "$image" "$arch"
-            done
-        done
-        for image in $BASE_IMAGES $EXTRA_IMAGES; do
-            ./docker-push-manifest.sh "$image" "$ARCHS"
+            ./docker-publish.sh "$image" "$ARCHS"
         done
         # Clean tags
         #apt-get install -y curl jq
