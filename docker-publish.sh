@@ -63,7 +63,7 @@ fi
 # manifest, and images tagged per architecture, meaning
 # that we replace what's already on the Docker Hub.
 
-if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
+if [ -n "${DOCKER_HUB_ORGANIZATION:-}" ]; then
     # Create a list of (arch, tag) couples
     ARCH_TAG=$(for arch in $ARCHITECTURES; do \
         . ./"$IMAGE-$arch".conf && echo "$arch" "$TAG"; done)
