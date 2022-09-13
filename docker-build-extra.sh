@@ -19,7 +19,7 @@ podman build --squash \
     --tag "$REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
-if [ -n "${CI_JOB_TOKEN:-}" ]; then
+if [ "$REGISTRY" != localhost ]; then
     # Push the image so that subsequent jobs can fetch it
     podman push "$REGISTRY_IMAGE/$IMAGE:$TAG"
 fi

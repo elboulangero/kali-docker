@@ -15,7 +15,7 @@ case "$ARCHITECTURE" in
     armhf) machine="armv7l" ;;
 esac
 
-if [ -n "${CI_JOB_TOKEN:-}" ]; then
+if [ "$REGISTRY" != localhost ]; then
     podman pull "$REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 

@@ -35,7 +35,7 @@ fi
 # Images are already on the registry, all we need to do is
 # create the manifest, populate it, and push it.
 
-if [ -n "${CI_JOB_TOKEN:-}" ]; then
+if [ "$REGISTRY" != localhost ]; then
     # Short variable name for readability
     IMG="$REGISTRY_IMAGE/$IMAGE"
 
