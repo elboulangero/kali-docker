@@ -9,7 +9,6 @@ TAGS=
 
 # Retrieve variables from former docker-build.sh
 FIRST_ARCH=$(echo "$ARCHITECTURES" | cut -d' ' -f1)
-# shellcheck source=/dev/null
 . ./"$IMAGE-$FIRST_ARCH".conf
 
 # In this script, we process all architecture-variants of an image,
@@ -24,7 +23,7 @@ if [ "$FIRST_ARCH" != "$ARCHITECTURES" ]; then
         echo "$UNEXPECTED_LINES" >&2
         exit 1
     fi
-    # shellcheck source=/dev/null
+    # shellcheck disable=SC2153
     TAGS=$(for arch in $ARCHITECTURES; do \
         . ./"$IMAGE-$arch".conf && echo "$TAG"; done)
 else
@@ -66,7 +65,6 @@ fi
 
 if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
     # Create a list of (arch, tag) couples
-    # shellcheck source=/dev/null
     ARCH_TAG=$(for arch in $ARCHITECTURES; do \
         . ./"$IMAGE-$arch".conf && echo "$arch" "$TAG"; done)
 

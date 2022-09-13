@@ -95,6 +95,5 @@ echo "Creating $tarball"
 tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
 
 if [ "$image" = "kali-last-release" ]; then
-    # shellcheck source=/dev/null
-    (. "$rootfsDir"/etc/os-release; echo "$VERSION") > "$versionFile"
+    (. "$rootfsDir"/etc/os-release && echo "$VERSION") > "$versionFile"
 fi

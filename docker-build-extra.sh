@@ -10,7 +10,6 @@ CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"kalilinux"}
 
 # Extra images are based on kali-rolling
 CONFFILE=kali-rolling-"$ARCHITECTURE".conf
-# shellcheck source=/dev/null
 VERSION=$(. ./"$CONFFILE"; echo "$VERSION")
 
 TAG=$VERSION-$ARCHITECTURE

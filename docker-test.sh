@@ -7,7 +7,6 @@ IMAGE=$1
 ARCHITECTURE=$2
 
 # Retrieve variables from former docker-build.sh
-# shellcheck source=/dev/null
 . ./"$IMAGE-$ARCHITECTURE".conf
 
 case "$ARCHITECTURE" in
