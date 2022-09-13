@@ -1,11 +1,16 @@
 
 variables:
-    BASE_IMAGES: 'kali-rolling kali-dev kali-last-release'
-    EXTRA_IMAGES: 'kali-experimental kali-bleeding-edge'
-    # At the moment we can't build Docker images for arm64,
-    # cf. https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5401
-    #ARCHS: 'amd64 arm64 armhf'
-    ARCHS: 'amd64 armhf'
+    # At the moment we can't build kali-last-release Docker images for arm64,
+    # as ldconfig segfaults. This is fixed with a newer kernel, but we don't
+    # control the GitLab CI kernel, and there is no ETA to update it:
+    # cf. https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5401.
+    # This is also fixed by a newer glibc/ldconf (2.34), which landed in Kali
+    # rolling. So for now, let's disable kali-last-release. We can enable it
+    # again after the next release.
+    #BASE_IMAGES: "kali-rolling kali-last-release kali-dev"
+    BASE_IMAGES: "kali-rolling kali-dev"
+    EXTRA_IMAGES: "kali-bleeding-edge kali-experimental"
+    ARCHS: "amd64 arm64 armhf"
 
 stages:
     - build
