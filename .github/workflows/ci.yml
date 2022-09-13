@@ -1,0 +1,166 @@
+# Seems like there's only Ubuntu runners available, no Debian.
+# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#choosing-github-hosted-runners
+
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  # NB: Images will appear in this order on the Docker Hub, so keep everything
+  # sorted per order of importance here, both architectures and images.
+  BASE_IMAGES: "kali-rolling kali-last-release kali-dev"
+  EXTRA_IMAGES: "kali-bleeding-edge kali-experimental"
+  ARCHS: "amd64 arm64 armhf"
+
+jobs:
+  build-rootfs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Take a look at the surroundings
+        run: |
+          v() { echo "==== $ $@"; "$@"; }
+          echo "================================"
+          v uname -a
+          v cat /proc/cmdline
+          v sh -c "cut -d ' ' -f 1 /proc/modules | sort -u"
+          v ls -l --time-style=+ /dev
+          v cat /proc/mounts
+          [ -e /proc/config.gz ] && v zgrep BINFMT_MISC /proc/config.gz
+          [ -e /boot/config-$(uname -r) ] && v grep BINFMT_MISC /boot/config-$(uname -r)
+          echo "================================"
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y arch-test debootstrap qemu-user-static
+      - name: Install Kali archive keyring
+        run: |
+          KEYRING_PKG_URL=$(wget -nv -O - \
+              https://http.kali.org/kali/dists/kali-rolling/main/binary-amd64/Packages.gz \
+              | gzip -dc | grep ^Filename: | grep kali-archive-keyring | head -n 1 | awk '{print $2}')
+          KEYRING_PKG_URL="https://http.kali.org/kali/$KEYRING_PKG_URL"
+          wget -nv "$KEYRING_PKG_URL"
+          sudo dpkg -i kali-archive-keyring_*_all.deb
+          rm kali-archive-keyring_*_all.deb
+      - name: Test architectures right away
+        run: |
+          echo "Arch test:"
+          for arch in $ARCHS; do
+              echo -n "* $arch: " && /usr/lib/arch-test/$arch
+          done
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build all the rootfs
+        run: |
+          for image in $BASE_IMAGES; do
+              for arch in $ARCHS; do
+                  echo "============================================================"
+                  echo "Building rootfs $image/$arch"
+                  echo "============================================================"
+                  sudo ./build-rootfs.sh "$image" "$arch"
+              done
+          done
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: rootfs-artifacts
+          path: |
+            *.tar.gz
+            *.release.version
+          retention-days: 1
+
+  build-docker-images:
+    runs-on: ubuntu-latest
+    needs: build-rootfs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: rootfs-artifacts
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+      - name: Authenticate to the registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | podman login -u "$GITHUB_ACTOR" --password-stdin ghcr.io
+      - name: Build and push Docker images
+        run: |
+          for image in $BASE_IMAGES; do
+              for arch in $ARCHS; do
+                  echo "============================================================"
+                  echo "Building docker image $image/$arch"
+                  echo "============================================================"
+                  ./docker-build.sh "$image" "$arch"
+              done
+          done
+          for image in $EXTRA_IMAGES; do
+              for arch in $ARCHS; do
+                  echo "============================================================"
+                  echo "Building extra docker image $image/$arch"
+                  echo "============================================================"
+                  ./docker-build-extra.sh "$image" "$arch"
+              done
+          done
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: conf-files
+          path: |
+            *.conf
+          retention-days: 1
+
+  test-docker-images:
+    runs-on: ubuntu-latest
+    needs: build-docker-images
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: conf-files
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+      - name: Test Docker images
+        run: |
+          for image in $BASE_IMAGES $EXTRA_IMAGES; do
+              for arch in $ARCHS; do
+                  echo "============================================================"
+                  echo "Testing docker image $image/$arch"
+                  echo "============================================================"
+                  ./docker-test.sh "$image" "$arch"
+              done
+          done
+
+  publish-docker-images:
+    runs-on: ubuntu-latest
+    needs: test-docker-images
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: conf-files
+      - name: Publish Docker images
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login -u "$GITHUB_ACTOR" --password-stdin ghcr.io
+          if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+              echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | podman login -u "$DOCKER_HUB_USER" --password-stdin docker.io
+          fi
+          # Push images in reverse order, so that they appear in order in Docker Hub.
+          ARCHS=$(printf "%s\n" $ARCHS | tac | paste -s -d " ")
+          IMAGES=$(printf "%s\n" $BASE_IMAGES $EXTRA_IMAGES | tac | paste -s -d " ")
+          for image in $IMAGES; do
+              echo "============================================================"
+              echo "Publishing docker image $image ($ARCHS)"
+              echo "============================================================"
+              ./docker-publish.sh "$image" "$ARCHS"
+          done

@@ -13,6 +13,11 @@ if [ "${GITLAB_CI:-}" = true ]; then
     PROJECT_URL="$CI_PROJECT_URL"
     BUILD_DATE="$CI_JOB_STARTED_AT"
     VCS_REF="$CI_COMMIT_SHORT_SHA"
+elif [ "${GITHUB_ACTIONS:-}" = true ]; then
+    REGISTRY_IMAGE="ghcr.io/$GITHUB_REPOSITORY"
+    PROJECT_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+    BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    VCS_REF="${GITHUB_SHA:0:7}"
 else
     REGISTRY_IMAGE="localhost/kalilinux"
     PROJECT_URL="https://gitlab.com/kalilinux/build-scripts/kali-docker"
