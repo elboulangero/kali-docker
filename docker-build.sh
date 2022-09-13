@@ -5,7 +5,7 @@ set -u
 
 IMAGE=$1
 ARCHITECTURE=$2
-TARBALL=$IMAGE-$ARCHITECTURE.tar.xz
+TARBALL=$IMAGE-$ARCHITECTURE.tar.gz
 VERSIONFILE=$IMAGE-$ARCHITECTURE.release.version
 
 if [ "${GITLAB_CI:-}" = true ]; then

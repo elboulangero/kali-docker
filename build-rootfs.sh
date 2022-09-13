@@ -8,7 +8,7 @@ architecture=$2
 mirror=${3:-http://http.kali.org/kali}
 
 rootfsDir=rootfs-$image-$architecture
-tarball=$image-$architecture.tar.xz
+tarball=$image-$architecture.tar.gz
 versionFile=$image-$architecture.release.version
 
 rootfs_chroot() {
@@ -92,7 +92,7 @@ find "$rootfsDir"/var/log -depth -type f -print0 | xargs -0 truncate -s 0
 rmdir "$rootfsDir/run/mount" 2>/dev/null || :
 
 echo "Creating $tarball"
-tar -I 'pixz -1' -C "$rootfsDir" -pcf "$tarball" .
+tar -C "$rootfsDir" -pczf "$tarball" .
 
 if [ "$image" = "kali-last-release" ]; then
     (. "$rootfsDir"/etc/os-release && echo "$VERSION") > "$versionFile"
