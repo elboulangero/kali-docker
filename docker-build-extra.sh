@@ -13,15 +13,15 @@ BASE=kali-rolling
 
 podman build --squash \
     --arch "$ARCHITECTURE" \
-    --build-arg CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"\
+    --build-arg REGISTRY_IMAGE="$REGISTRY_IMAGE"\
     --build-arg TAG="$TAG" \
     --file extra/"$IMAGE" \
-    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
+    --tag "$REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
     # Push the image so that subsequent jobs can fetch it
-    podman push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    podman push "$REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
 cp "$BASE-$ARCHITECTURE".conf "$IMAGE-$ARCHITECTURE".conf

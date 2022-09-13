@@ -16,10 +16,10 @@ case "$ARCHITECTURE" in
 esac
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
-    podman pull "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    podman pull "$REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
-TEST_ARCH=$(podman run --rm "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" uname -m)
+TEST_ARCH=$(podman run --rm "$REGISTRY_IMAGE/$IMAGE:$TAG" uname -m)
 if [ "$machine" == "$TEST_ARCH" ]; then
     echo "OK: Got expected architecture '$TEST_ARCH'"
 else

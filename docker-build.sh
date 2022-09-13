@@ -8,7 +8,7 @@ ARCHITECTURE=$2
 TARBALL=$IMAGE-$ARCHITECTURE.tar.xz
 VERSIONFILE=$IMAGE-$ARCHITECTURE.release.version
 
-CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"localhost/kalilinux"}
+REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"localhost/kalilinux"}
 PROJECT_URL=${CI_PROJECT_URL:-"https://gitlab.com/kalilinux/build-scripts/kali-docker"}
 BUILD_DATE=${CI_JOB_STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 BUILD_VERSION=$(date -u +"%Y.%m.%d")
@@ -35,16 +35,16 @@ podman build --squash \
     --build-arg PROJECT_URL="$PROJECT_URL" \
     --build-arg VCS_REF="$VCS_REF" \
     --build-arg RELEASE_DESCRIPTION="$RELEASE_DESCRIPTION" \
-    --tag "$CI_REGISTRY_IMAGE/$IMAGE:$TAG" \
+    --tag "$REGISTRY_IMAGE/$IMAGE:$TAG" \
     .
 
 if [ -n "${CI_JOB_TOKEN:-}" ]; then
     # Push the image so that subsequent jobs can fetch it
-    podman push "$CI_REGISTRY_IMAGE/$IMAGE:$TAG"
+    podman push "$REGISTRY_IMAGE/$IMAGE:$TAG"
 fi
 
 cat >"$IMAGE-$ARCHITECTURE".conf <<END
-CI_REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
+REGISTRY_IMAGE="$REGISTRY_IMAGE"
 TAG="$TAG"
 VERSION="$VERSION"
 END
