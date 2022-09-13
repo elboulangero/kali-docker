@@ -69,9 +69,9 @@ build-rootfs:
           # Build all the rootfs
           for image in $BASE_IMAGES; do
               for arch in $ARCHS; do
-                  echo "========================================"
+                  echo "============================================================"
                   echo "Building rootfs $image/$arch"
-                  echo "========================================"
+                  echo "============================================================"
                   ./build-rootfs.sh "$image" "$arch"
               done
           done
@@ -92,11 +92,17 @@ build-docker-images:
         echo "$CI_JOB_TOKEN" | podman login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
+                echo "============================================================"
+                echo "Building docker image $image/$arch"
+                echo "============================================================"
                 ./docker-build.sh "$image" "$arch"
             done
         done
         for image in $EXTRA_IMAGES; do
             for arch in $ARCHS; do
+                echo "============================================================"
+                echo "Building extra docker image $image/$arch"
+                echo "============================================================"
                 ./docker-build-extra.sh "$image" "$arch"
             done
         done
@@ -116,6 +122,9 @@ test-docker-images:
         update-alternatives --set iptables /usr/sbin/iptables-legacy
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
             for arch in $ARCHS; do
+                echo "============================================================"
+                echo "Testing docker image $image/$arch"
+                echo "============================================================"
                 ./docker-test.sh "$image" "$arch"
             done
         done
@@ -134,5 +143,8 @@ publish-docker-images:
             echo "$DOCKER_HUB_ACCESS_TOKEN" | podman login -u "$DOCKER_HUB_USER" --password-stdin docker.io
         fi
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
+            echo "============================================================"
+            echo "Publishing docker image $image ($ARCHS)"
+            echo "============================================================"
             ./docker-publish.sh "$image" "$ARCHS"
         done
