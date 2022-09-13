@@ -136,10 +136,3 @@ publish-docker-images:
         for image in $BASE_IMAGES $EXTRA_IMAGES; do
             ./docker-publish.sh "$image" "$ARCHS"
         done
-        # Clean tags
-        #apt-get install -y curl jq
-        #for image in $BASE_IMAGES $EXTRA_IMAGES; do
-        #    for arch in $ARCHS; do
-        #        ./docker-cleanup.sh "$image" "$arch"
-        #    done
-        #done
