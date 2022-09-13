@@ -8,11 +8,19 @@ ARCHITECTURE=$2
 TARBALL=$IMAGE-$ARCHITECTURE.tar.xz
 VERSIONFILE=$IMAGE-$ARCHITECTURE.release.version
 
-REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"localhost/kalilinux"}
-PROJECT_URL=${CI_PROJECT_URL:-"https://gitlab.com/kalilinux/build-scripts/kali-docker"}
-BUILD_DATE=${CI_JOB_STARTED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
+if [ "${GITLAB_CI:-}" = true ]; then
+    REGISTRY_IMAGE="$CI_REGISTRY_IMAGE"
+    PROJECT_URL="$CI_PROJECT_URL"
+    BUILD_DATE="$CI_JOB_STARTED_AT"
+    VCS_REF="$CI_COMMIT_SHORT_SHA"
+else
+    REGISTRY_IMAGE="localhost/kalilinux"
+    PROJECT_URL="https://gitlab.com/kalilinux/build-scripts/kali-docker"
+    BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    VCS_REF=$(git rev-parse --short HEAD)
+fi
+
 BUILD_VERSION=$(date -u +"%Y.%m.%d")
-VCS_REF=${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD)}
 
 case "$IMAGE" in
     kali-last-release)
