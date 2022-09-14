@@ -83,7 +83,7 @@ if [ -n "${DOCKER_HUB_ORGANIZATION:-}" ]; then
     # doesn't say, the doc doesn't say either.
     podman manifest create "$IMG":latest
     for arch in $ARCHITECTURES; do
-        podman push "$IMG:$arch"
+        podman push -f v2s2 "$IMG:$arch"
         podman manifest add "$IMG":latest "$IMG:$arch"
     done
     podman manifest push -f v2s2 "$IMG":latest docker://"$IMG":latest
