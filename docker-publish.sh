@@ -50,11 +50,11 @@ if [ -n "${CI_JOB_TOKEN:-}" ]; then
     for tag in $TAGS; do
         podman manifest add "$IMG:$VERSION" "$IMG:$tag"
     done
-    podman manifest push "$IMG:$VERSION" docker://"$IMG:$VERSION"
+    podman manifest push -f v2s2 "$IMG:$VERSION" docker://"$IMG:$VERSION"
 
     # Create and push the 'latest' manifest
     podman tag "$IMG:$VERSION" "$IMG":latest
-    podman manifest push "$IMG":latest docker://"$IMG":latest
+    podman manifest push -f v2s2 "$IMG":latest docker://"$IMG":latest
 fi
 
 # Publish images to the Docker Hub.
@@ -88,5 +88,5 @@ if [ -n "${DOCKER_HUB_ACCESS_TOKEN:-}" ]; then
         podman push "$IMG:$arch"
         podman manifest add "$IMG":latest "$IMG:$arch"
     done
-    podman manifest push "$IMG":latest docker://"$IMG":latest
+    podman manifest push -f v2s2 "$IMG":latest docker://"$IMG":latest
 fi
