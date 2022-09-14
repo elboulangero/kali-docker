@@ -63,10 +63,6 @@ build-rootfs:
           dpkg -i kali-archive-keyring_*_all.deb
           rm kali-archive-keyring_*_all.deb
         - |
-          # Enable support for additional executable binary formats
-          update-binfmts --enable
-          update-binfmts --display | sed -n 's/:$//p'
-        - |
           # Test architectures right away
           echo "Arch test:"
           for arch in $ARCHS; do
@@ -95,7 +91,6 @@ build-docker-images:
         set -e
         apt-get update
         apt-get install -y binfmt-support ca-certificates podman qemu-user-static
-        update-binfmts --enable
         echo "$CI_JOB_TOKEN" | podman login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
         for image in $BASE_IMAGES; do
             for arch in $ARCHS; do
@@ -123,7 +118,6 @@ test-docker-images:
         set -e
         apt-get update
         apt-get install -y binfmt-support ca-certificates podman qemu-user-static
-        update-binfmts --enable
         # Switch to iptables legacy, as long as GitLab CI doesn't support nftables.
         # Cf. https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5184#note_637383773
         update-alternatives --set iptables /usr/sbin/iptables-legacy
